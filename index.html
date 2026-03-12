@@ -1,136 +1,177 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>The Chronic Pain Hub</title>
+  <meta name="description" content="A multimodal pain communication and navigation platform focused on Wisconsin care pathways." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@400;600;700&family=Sora:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <header>
-    <div class="container">
-      <h1>The Chronic Pain Hub</h1>
-      <p>A Multimodal Pain Communication & Navigation Platform</p>
+  <header class="site-header">
+    <div class="container header-inner">
+      <a class="logo" href="index.html">The Chronic Pain Hub</a>
+      <nav class="nav-links">
+        <a href="index.html#modules">Modules</a>
+        <a href="index.html#how">How It Works</a>
+        <a href="module4.html">Find Local Care</a>
+        <a class="cta-button" href="module1.html">Start Building Your Story</a>
+      </nav>
     </div>
   </header>
 
-  <section class="intro">
-    <div class="container">
-      <h2>Empowering Patients Through Multimodal Communication</h2>
-      <p>Our platform addresses the challenges of pain communication by providing multiple pathways for expression: words, images, sounds, and actionable navigation. Designed to bridge cultural, linguistic, and emotional barriers in chronic pain management.</p>
-    </div>
-  </section>
-
-  <section class="modules">
-    <div class="container">
-      <div class="module" id="module1">
-        <h3>Module 1: Semantic Translator/Pre-Visit Pain Communication Builder</h3>
-        <p><strong>Goal:</strong> To convert cultural metaphors and native-language narratives into medical ontologies.</p>
-        <p><strong>How it works:</strong> Uses Cross-Lingual NLU (Natural Language Understanding). It doesn't just translate Hmong/Spanish; it performs Metaphor Mapping.</p>
-        <p><strong>The AI Output:</strong> If a patient says "pain like a ghost in the marrow," the AI generates a clinician-facing note: "Patient describes deep, non-localized somatic distress (McGill Category: Affective/Exhausting)."</p>
-        <p>Outputs include 1-page "Visit Summary", Pain phenotype profile, Top concerns, Key questions for physician, Optional emotional/context flags.</p>
-        <h4>Core Functions</h4>
-        <ul>
-          <li>Write or speak in preferred language</li>
-          <li>Guided prompts (dynamic, adaptive questioning)</li>
-          <li>Location selection (body map)</li>
-          <li>Animation-based pain quality selection</li>
-          <li>Context prompts (sleep, stress, food, flare pattern)</li>
-        </ul>
-        <h4>AI Layer</h4>
-        <ul>
-          <li>Cross-lingual semantic mapping (not literal translation)</li>
-          <li>Metaphor detection (e.g., "broken" in Hmong → subtype clarification prompts)</li>
-          <li>Clarifying follow-up prompts</li>
-          <li>Structured clinical summary generation</li>
-        </ul>
-        <p>This module directly responds to challenges like "Hard to think of response", "Prepare ahead of time", "Numbers don't translate pain", "Doctors misinterpret symptoms", "Translation loses meaning".</p>
+  <main>
+    <section class="hero">
+      <div class="container hero-grid">
+        <div class="hero-copy">
+          <p class="hero-eyebrow">Wisconsin-ready support</p>
+          <h1>Find care that hears your pain, not just your words.</h1>
+          <p>The Chronic Pain Hub blends language, visuals, and biometrics into a clear care pathway. It is built for people who struggle to describe pain and for clinicians who need signal, not noise.</p>
+          <div class="search-card">
+            <label for="zip">Start with a zip code and a need</label>
+            <div class="search-row">
+              <input id="zip" name="zip" type="text" placeholder="Zip code" />
+              <select name="need">
+                <option>Sleep support</option>
+                <option>Mobility and movement</option>
+                <option>Mental health care</option>
+                <option>Care navigation</option>
+                <option>Non-pharmaceutical options</option>
+              </select>
+              <button type="button">Search support</button>
+            </div>
+            <div class="search-chips">
+              <span class="chip">Pain flare</span>
+              <span class="chip">Body map</span>
+              <span class="chip">Hmong/Spanish translation</span>
+              <span class="chip">Telehealth-first</span>
+              <span class="chip">Transportation help</span>
+            </div>
+          </div>
+        </div>
+        <div class="hero-panel">
+          <div class="panel-card">
+            <p class="panel-title">What makes this different</p>
+            <p>We pair expression tools with a navigation engine so every story ends in a clear, local next step.</p>
+          </div>
+          <div class="panel-card">
+            <p class="panel-title">Built for real-world barriers</p>
+            <p>Designed to handle cultural metaphors, downplayed symptoms, and limited appointment time.</p>
+          </div>
+          <div class="panel-card">
+            <p class="panel-title">Outputs clinicians can use</p>
+            <p>Concise visit summaries, pain phenotype profiles, and routed support plans.</p>
+          </div>
+        </div>
       </div>
+    </section>
 
-      <div class="module" id="module2">
-        <h3>Module 2: Visual Pain Expression System</h3>
-        <p><strong>Goal:</strong> To bypass linguistic barriers entirely using abstract animations.</p>
-        <p><strong>How it works:</strong> Instead of asking "Describe your pain", patients choose from an Animation Taxonomy (e.g., Pulsing, Radiating, Crushing).</p>
-        <p><strong>The AI Output:</strong> It correlates the visual choice with a Pain Phenotype.</p>
-        <p><strong>Innovation:</strong> Detects Communication Discordance. If a patient's words are "calm" but they pick a "violent flashing" animation, the AI flags a "High Severity/Symptom Downplaying Risk" for the doctor.</p>
-        <h4>Animation Categories (example taxonomy)</h4>
-        <ul>
-          <li>Pulsing / throbbing</li>
-          <li>Flashing / stabbing</li>
-          <li>Radiating outward</li>
-          <li>Crushing pressure</li>
-          <li>Static tightness</li>
-          <li>Electric shock</li>
-          <li>Diffuse fog-like ache</li>
-        </ul>
-        <h4>AI Role</h4>
-        <ul>
-          <li>Map animation selection → structured pain descriptor</li>
-          <li>Correlate visual + linguistic concordance</li>
-          <li>Detect mismatch (e.g., language mild, visual severe)</li>
-          <li>Cluster cross-cultural visual patterns (publishable)</li>
-        </ul>
+    <section id="modules" class="section">
+      <div class="container">
+        <div class="section-title">
+          <h2>Four connected modules</h2>
+          <p>Each module is a dedicated experience. Together they create an end-to-end pain communication pathway.</p>
+        </div>
+        <div class="module-grid">
+          <a class="module-card reveal" href="module1.html">
+            <span class="module-tag">Module 1</span>
+            <h3>Semantic Translator</h3>
+            <p>Turn cultural metaphors and native-language narratives into clinician-ready summaries.</p>
+            <span>View module details</span>
+          </a>
+          <a class="module-card reveal" href="module2.html">
+            <span class="module-tag">Module 2</span>
+            <h3>Visual Pain Expression</h3>
+            <p>Use animation-based choices to express pain without language barriers.</p>
+            <span>View module details</span>
+          </a>
+          <a class="module-card reveal" href="module3.html">
+            <span class="module-tag">Module 3</span>
+            <h3>Bio-Acoustic Micro-Capture</h3>
+            <p>Capture vocal strain in five-second bursts to build objective pain signals.</p>
+            <span>View module details</span>
+          </a>
+          <a class="module-card reveal" href="module4.html">
+            <span class="module-tag">Module 4</span>
+            <h3>Wisconsin Pain Navigation</h3>
+            <p>Translate signals into local, ranked care pathways and social support options.</p>
+            <span>View module details</span>
+          </a>
+        </div>
       </div>
+    </section>
 
-      <div class="module" id="module3">
-        <h3>Module 3: Low Burden Tracking/Bio-Acoustic Micro-Capture</h3>
-        <p><strong>Goal:</strong> To provide an objective pain "truth-check" through 5-second voice bursts.</p>
-        <p><strong>How it works:</strong> Uses Acoustic Feature Extraction. The AI ignores what is said and analyzes how it is said (shimmer, jitter, vocal strain).</p>
-        <p><strong>The AI Output:</strong> Generates a Vocal Strain Index (1.0–5.0).</p>
-        <p><strong>Research Value:</strong> This is your strongest asset for a Federal R21 Grant, as it provides a new "digital biomarker" for pain intensity.</p>
-        <h4>Core Design</h4>
-        <ul>
-          <li>One-tap flare button</li>
-          <li>Optional 5-second voice memo</li>
-          <li>Optional animation tap</li>
-          <li>No long forms</li>
-        </ul>
-        <h4>AI Layer</h4>
-        <ul>
-          <li>Extract key semantic features</li>
-          <li>Identify distress tone</li>
-          <li>Pattern clustering over time</li>
-          <li>Generate simple weekly pattern visualization</li>
-        </ul>
+    <section id="how" class="section">
+      <div class="container">
+        <div class="section-title">
+          <h2>How it works</h2>
+          <p>A patient-centered flow that blends multiple inputs into one unified care plan.</p>
+        </div>
+        <div class="steps">
+          <div class="step-card reveal">
+            <div class="step-number">1</div>
+            <h3>Capture the story</h3>
+            <p>Patients describe pain using words, metaphors, visual animations, or short audio clips.</p>
+          </div>
+          <div class="step-card reveal">
+            <div class="step-number">2</div>
+            <h3>Translate for clinicians</h3>
+            <p>AI converts inputs into structured summaries, pain phenotypes, and key questions.</p>
+          </div>
+          <div class="step-card reveal">
+            <div class="step-number">3</div>
+            <h3>Route to local care</h3>
+            <p>Signals flow into a Wisconsin-specific navigation engine for ranked care pathways.</p>
+          </div>
+        </div>
       </div>
+    </section>
 
-      <div class="module" id="module4">
-        <h3>Module 4: Wisconsin Pain Navigation Engine</h3>
-        <p><strong>Goal:</strong> To turn clinical signals into localized Wisconsin support.</p>
-        <p><strong>How it works:</strong> A Geospatial Recommender Engine integrated with the 211 Wisconsin API and WIRE (Wisconsin Information Referral Exchange).</p>
-        <p><strong>The AI Logic:</strong> If Module 1 detects sleep issues and Module 2 shows high distress, the tool prioritizes Wisconsin Healthy Aging (WIHA) workshops or local CBT-I providers covered by ForwardHealth (Medicaid).</p>
-        <p><strong>Innovation:</strong> It doesn't just list doctors; it solves for Social Determinants of Health (SDOH) like transport or food access.</p>
-        <h4>Inputs</h4>
-        <ul>
-          <li>Pain phenotype (from Modules 1 & 2)</li>
-          <li>Language</li>
-          <li>Insurance</li>
-          <li>ZIP code</li>
-          <li>Rural/HPSA status</li>
-          <li>Mobility constraints</li>
-          <li>Invalidation/distress markers</li>
-        </ul>
-        <h4>Routing Logic Examples</h4>
-        <ul>
-          <li>Rural + high severity → telehealth-first options</li>
-          <li>Medicaid → ForwardHealth-accepting providers</li>
-          <li>High invalidation → trauma-informed pain psychologist</li>
-          <li>Sleep cluster → sleep clinic + CBT-I</li>
-          <li>Mobility barrier → county transportation services</li>
-          <li>Language match → culturally concordant providers</li>
-        </ul>
-        <p>Other pain self-management tools: videos, non-pharmaceutical options for pain care—PT, massage, acupuncture, psychotherapy, etc.</p>
-        <h4>Output</h4>
-        <ul>
-          <li>Ranked care pathway</li>
-        </ul>
+    <section class="section">
+      <div class="container">
+        <div class="callout reveal">
+          <h2>Designed for the moments that get missed</h2>
+          <p><strong>Chronic pain patients often say:</strong> “I cannot explain it,” “Numbers do not translate,” or “The doctor did not get it.” We built the platform so that every input becomes a meaningful, structured signal.</p>
+          <div class="info-grid">
+            <div class="info-card">
+              <h3>Clear output</h3>
+              <p>One-page visit summaries, emotional context flags, and pain phenotype profiles.</p>
+            </div>
+            <div class="info-card">
+              <h3>Equity-first inputs</h3>
+              <p>Handles multiple languages, cultural metaphors, and non-verbal expression.</p>
+            </div>
+            <div class="info-card">
+              <h3>Navigation beyond clinics</h3>
+              <p>Connects to transportation, food access, and behavioral health support.</p>
+            </div>
+          </div>
+        </div>
       </div>
-    </div>
-  </section>
+    </section>
+  </main>
 
-  <footer>
-    <div class="container">
-      <p>&copy; 2026 The Chronic Pain Hub. All rights reserved.</p>
+  <footer class="site-footer">
+    <div class="container footer-grid">
+      <div>
+        <p class="logo">The Chronic Pain Hub</p>
+        <p>A multimodal pain communication and navigation platform.</p>
+      </div>
+      <div>
+        <p><strong>Explore</strong></p>
+        <p><a href="module1.html">Semantic Translator</a></p>
+        <p><a href="module2.html">Visual Expression</a></p>
+        <p><a href="module3.html">Bio-Acoustic Capture</a></p>
+        <p><a href="module4.html">Pain Navigation</a></p>
+      </div>
+      <div>
+        <p><strong>Contact</strong></p>
+        <p>Email: paincontextlab@gmail.com</p>
+        <p>Serving Wisconsin communities</p>
+      </div>
     </div>
   </footer>
 

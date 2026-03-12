@@ -1,9 +1,12 @@
-// Smooth scrolling for anchor links
-document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-  anchor.addEventListener('click', function (e) {
-    e.preventDefault();
-    const target = document.querySelector(this.getAttribute('href'));
+﻿const anchorLinks = document.querySelectorAll('a[href^="#"]');
+
+anchorLinks.forEach(anchor => {
+  anchor.addEventListener('click', event => {
+    const targetId = anchor.getAttribute('href');
+    const target = document.querySelector(targetId);
+
     if (target) {
+      event.preventDefault();
       target.scrollIntoView({
         behavior: 'smooth',
         block: 'start'
@@ -12,24 +15,19 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
   });
 });
 
-// Add fade-in animation on scroll
-const observerOptions = {
-  threshold: 0.1,
-  rootMargin: '0px 0px -50px 0px'
-};
+const revealElements = document.querySelectorAll('.reveal');
 
-const observer = new IntersectionObserver((entries) => {
-  entries.forEach(entry => {
-    if (entry.isIntersecting) {
-      entry.target.style.opacity = '1';
-      entry.target.style.transform = 'translateY(0)';
-    }
+if (revealElements.length) {
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('is-visible');
+        observer.unobserve(entry.target);
+      }
+    });
+  }, {
+    threshold: 0.2
   });
-}, observerOptions);
 
-document.querySelectorAll('.module').forEach(module => {
-  module.style.opacity = '0';
-  module.style.transform = 'translateY(20px)';
-  module.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
-  observer.observe(module);
-});
+  revealElements.forEach(element => observer.observe(element));
+}

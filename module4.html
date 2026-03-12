@@ -1,0 +1,103 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Module 4 | The Chronic Pain Hub</title>
+  <meta name="description" content="Module 4 turns clinical signals into Wisconsin-specific care navigation and support." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@400;600;700&family=Sora:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="container header-inner">
+      <a class="logo" href="index.html">The Chronic Pain Hub</a>
+      <nav class="nav-links">
+        <a href="index.html#modules">Modules</a>
+        <a href="index.html#how">How It Works</a>
+        <a href="module4.html">Find Local Care</a>
+        <a class="cta-button" href="module1.html">Start Building Your Story</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="module-hero">
+      <div class="container hero-grid">
+        <div>
+          <p class="hero-eyebrow">Module 4</p>
+          <h1>Wisconsin Pain Navigation Engine</h1>
+          <p>Goal: turn clinical signals into localized Wisconsin support, not just a list of providers.</p>
+          <div class="module-links">
+            <a href="module3.html">Back to Module 3</a>
+            <a href="index.html#modules">See all modules</a>
+          </div>
+        </div>
+        <div class="hero-card">
+          <p class="panel-title">Inputs used for routing</p>
+          <ul>
+            <li>Pain phenotype from Modules 1 and 2</li>
+            <li>Language and insurance</li>
+            <li>ZIP code and rural status</li>
+            <li>Mobility constraints</li>
+            <li>Invalidation or distress markers</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="module-content">
+      <div class="container content-grid">
+        <div>
+          <h2>How it works</h2>
+          <p>A geospatial recommender engine connects with 211 Wisconsin data and WIRE to produce ranked care pathways.</p>
+          <p>When Module 1 detects sleep issues and Module 2 shows high distress, the tool prioritizes Wisconsin Healthy Aging workshops or CBT-I providers that accept ForwardHealth.</p>
+          <h2>Routing logic examples</h2>
+          <ul>
+            <li>Rural + high severity -> telehealth-first options</li>
+            <li>Medicaid -> ForwardHealth-accepting providers</li>
+            <li>High invalidation -> trauma-informed pain psychologist</li>
+            <li>Sleep cluster -> sleep clinic + CBT-I</li>
+            <li>Mobility barrier -> county transportation services</li>
+            <li>Language match -> culturally concordant providers</li>
+          </ul>
+        </div>
+        <div>
+          <div class="info-card reveal">
+            <h3>Output</h3>
+            <p>Ranked care pathways plus non-pharmaceutical options such as PT, massage, acupuncture, and psychotherapy.</p>
+          </div>
+          <div class="info-card reveal" style="margin-top: 18px;">
+            <h3>SDOH coverage</h3>
+            <p>Built to address transportation, food access, and other social determinants that block care.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-grid">
+      <div>
+        <p class="logo">The Chronic Pain Hub</p>
+        <p>A multimodal pain communication and navigation platform.</p>
+      </div>
+      <div>
+        <p><strong>Explore</strong></p>
+        <p><a href="module1.html">Semantic Translator</a></p>
+        <p><a href="module2.html">Visual Expression</a></p>
+        <p><a href="module3.html">Bio-Acoustic Capture</a></p>
+      </div>
+      <div>
+        <p><strong>Contact</strong></p>
+        <p>Email: info@chronicpainhub.org</p>
+        <p>Serving Wisconsin communities</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
