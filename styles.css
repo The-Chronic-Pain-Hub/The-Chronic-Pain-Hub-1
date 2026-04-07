@@ -60,10 +60,24 @@ a {
   padding: 16px 0;
 }
 
-.logo {
+.logo-container {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.logo-text {
   font-family: "Fraunces", serif;
   font-size: 1.3rem;
   font-weight: 600;
+  color: inherit;
+  text-decoration: none;
+}
+
+.uw-logo,
+.lab-logo {
+  height: 40px;
+  width: auto;
 }
 
 .nav-links {
