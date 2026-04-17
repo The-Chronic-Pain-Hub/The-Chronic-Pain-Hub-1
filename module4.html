@@ -33,21 +33,33 @@
         <div>
           <p class="hero-eyebrow">Module 4</p>
           <h1>Wisconsin Pain Navigation Engine</h1>
-          <p>Goal: turn clinical signals into localized Wisconsin support, not just a list of providers.</p>
+          <p>Goal: turn clinical signals into localized Wisconsin support, not just a list of providers. Module 4 now blends Wisconsin shortage-area data with pain-focused provider matches.</p>
           <div class="module-links">
             <a href="module3.html">Back to Module 3</a>
             <a href="index.html#modules">See all modules</a>
           </div>
         </div>
         <div class="hero-card">
-          <p class="panel-title">Inputs used for routing</p>
-          <ul>
-            <li>Pain phenotype from Modules 1 and 2</li>
-            <li>Language and insurance</li>
-            <li>ZIP code and rural status</li>
-            <li>Mobility constraints</li>
-            <li>Invalidation or distress markers</li>
-          </ul>
+          <p class="panel-title">Live Wisconsin routing snapshot</p>
+          <div class="snapshot-grid" id="snapshot-grid">
+            <div class="snapshot-stat">
+              <span class="snapshot-value" id="snapshot-hpsa">--</span>
+              <span class="snapshot-label">designated primary-care shortage areas</span>
+            </div>
+            <div class="snapshot-stat">
+              <span class="snapshot-value" id="snapshot-counties">--</span>
+              <span class="snapshot-label">Wisconsin counties represented</span>
+            </div>
+            <div class="snapshot-stat">
+              <span class="snapshot-value" id="snapshot-rural">--</span>
+              <span class="snapshot-label">rural HPSA designations</span>
+            </div>
+            <div class="snapshot-stat">
+              <span class="snapshot-value" id="snapshot-providers">--</span>
+              <span class="snapshot-label">pain-provider matches loaded</span>
+            </div>
+          </div>
+          <p class="snapshot-caption" id="snapshot-caption">Loading Wisconsin source snapshot...</p>
         </div>
       </div>
     </section>
@@ -56,8 +68,8 @@
       <div class="container content-grid">
         <div>
           <h2>How it works</h2>
-          <p>A geospatial recommender engine connects with 211 Wisconsin data and WIRE to produce ranked care pathways.</p>
-          <p>When Module 1 detects sleep issues and Module 2 shows high distress, the tool prioritizes Wisconsin Healthy Aging workshops or CBT-I providers that accept ForwardHealth.</p>
+          <p>A geospatial recommender engine combines lived-experience signals with statewide access constraints. This module now pulls in Wisconsin shortage-area signals and pain-focused provider records to shape who gets prioritized first.</p>
+          <p>When Module 1 detects sleep issues and Module 2 shows high distress, the tool can favor clinics in lower-shortage regions, surface Medicaid-friendly pain specialists, and flag rural counties where telehealth or transportation support should be weighted more heavily.</p>
           <h2>Routing logic examples</h2>
           <ul>
             <li>Rural + high severity -> telehealth-first options</li>
@@ -71,12 +83,72 @@
         <div>
           <div class="info-card reveal">
             <h3>Output</h3>
-            <p>Ranked care pathways plus non-pharmaceutical options such as PT, massage, acupuncture, and psychotherapy.</p>
+            <p>Ranked care pathways plus non-pharmaceutical options such as PT, massage, acupuncture, and psychotherapy, now grounded in Wisconsin access and workforce data.</p>
+          </div>
+          <div class="info-card reveal" style="margin-top: 18px;">
+            <h3>API sources</h3>
+            <p>Module 4 uses the NPI Registry pain query you supplied and a current HRSA Wisconsin HPSA snapshot for primary-care shortage context.</p>
           </div>
           <div class="info-card reveal" style="margin-top: 18px;">
             <h3>SDOH coverage</h3>
-            <p>Built to address transportation, food access, and other social determinants that block care.</p>
+            <p>Built to address transportation, food access, and other social determinants that block care when a matching provider exists but remains hard to reach.</p>
           </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section module-dashboard">
+      <div class="container">
+        <div class="section-title">
+          <div>
+            <h2>Wisconsin Access Snapshot</h2>
+            <p>Shortage pressure, county priority, and pain-provider matches rendered from the two data sources you shared.</p>
+          </div>
+          <div class="dashboard-meta">
+            <p id="module4-refresh">Refreshing source metadata...</p>
+          </div>
+        </div>
+
+        <div class="dashboard-grid">
+          <article class="dashboard-card reveal">
+            <div class="dashboard-card-head">
+              <h3>Shortage pressure</h3>
+              <span class="dashboard-chip">HRSA</span>
+            </div>
+            <div class="metric-grid" id="hpsa-metrics"></div>
+            <p class="dashboard-note" id="hpsa-note"></p>
+            <p class="source-link-row">
+              <a id="hpsa-source-link" href="#" target="_blank" rel="noreferrer">Open HRSA source</a>
+            </p>
+          </article>
+
+          <article class="dashboard-card reveal">
+            <div class="dashboard-card-head">
+              <h3>Priority counties</h3>
+              <span class="dashboard-chip dashboard-chip-cool">Routing</span>
+            </div>
+            <div class="priority-list" id="county-priority-list"></div>
+          </article>
+
+          <article class="dashboard-card reveal">
+            <div class="dashboard-card-head">
+              <h3>Highest-need Wisconsin areas</h3>
+              <span class="dashboard-chip">HPSA</span>
+            </div>
+            <div class="shortage-list" id="top-shortage-list"></div>
+          </article>
+
+          <article class="dashboard-card reveal">
+            <div class="dashboard-card-head">
+              <h3>Pain-focused provider matches</h3>
+              <span class="dashboard-chip dashboard-chip-sun">NPI</span>
+            </div>
+            <p class="dashboard-note">These are the first Wisconsin results returned by the NPI Registry pain taxonomy query. Use them as navigation leads, not final credentialing or availability checks.</p>
+            <p class="source-link-row">
+              <a id="npi-source-link" href="#" target="_blank" rel="noreferrer">Open NPI query</a>
+            </p>
+            <div class="provider-grid" id="provider-grid"></div>
+          </article>
         </div>
       </div>
     </section>
@@ -103,5 +175,7 @@
   </footer>
 
   <script src="script.js"></script>
+  <script src="module4-data.js"></script>
+  <script src="module4.js"></script>
 </body>
 </html>
