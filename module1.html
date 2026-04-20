@@ -542,8 +542,10 @@
   </footer>
 
   <script src="script.js"></script>
+  <script src="config.js"></script>
   <script>
-    const API_BASE = '';  // Same origin - works for both localhost and production
+    // Use the API configuration from config.js
+    const API_BASE = window.API_CONFIG ? window.API_CONFIG.BASE_URL : '';
 
     // Example pain descriptions in multiple languages
     const examples = {

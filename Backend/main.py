@@ -1,7 +1,7 @@
 from fastapi import FastAPI, File, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, FileResponse
 import os
 
 from services.whisper_service import transcribeAudio
@@ -40,21 +40,103 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.mount("/images", StaticFiles(directory="images"), name="images")
+# Mount static files
+parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+app.mount("/images", StaticFiles(directory=os.path.join(os.path.dirname(__file__), "images")), name="images")
 
-# Serve frontend HTML
+# Serve static files from root directory (CSS, JS, images)
+@app.get("/styles.css")
+async def get_styles():
+    return FileResponse(os.path.join(parent_dir, "styles.css"))
+
+@app.get("/script.js")
+async def get_script():
+    return FileResponse(os.path.join(parent_dir, "script.js"))
+
+@app.get("/config.js")
+async def get_config():
+    return FileResponse(os.path.join(parent_dir, "config.js"))
+
+@app.get("/module4.js")
+async def get_module4_script():
+    return FileResponse(os.path.join(parent_dir, "module4.js"))
+
+@app.get("/module4-data.js")
+async def get_module4_data():
+    return FileResponse(os.path.join(parent_dir, "module4-data.js"))
+
+@app.get("/{filename}.png")
+async def get_png_image(filename: str):
+    file_path = os.path.join(parent_dir, f"{filename}.png")
+    if os.path.exists(file_path):
+        return FileResponse(file_path)
+    return {"error": "File not found"}
+
+@app.get("/{filename}.jpg")
+async def get_jpg_image(filename: str):
+    file_path = os.path.join(parent_dir, f"{filename}.jpg")
+    if os.path.exists(file_path):
+        return FileResponse(file_path)
+    return {"error": "File not found"}
+
+# Serve frontend HTML pages
 @app.get("/", response_class=HTMLResponse)
 async def root():
-    """Serve the Module 1 pain assessment page."""
+    """Serve the homepage (index.html)."""
     try:
-        html_path = os.path.join(os.path.dirname(__file__), "../module1.html")
+        html_path = os.path.join(parent_dir, "index.html")
         with open(html_path, "r", encoding="utf-8") as f:
             return f.read()
     except FileNotFoundError:
         return HTMLResponse(
-            content="<h1>Frontend not found</h1><p>API is running at /api/*</p><p>Make sure module1.html exists</p>",
+            content="<h1>Welcome to Pain Report Platform</h1><p>API is running at /api/*</p>",
             status_code=404
         )
+
+@app.get("/index.html", response_class=HTMLResponse)
+async def index_page():
+    """Serve the homepage."""
+    return await root()
+
+@app.get("/module1.html", response_class=HTMLResponse)
+async def module1_page():
+    """Serve Module 1 - Pain Assessment."""
+    try:
+        html_path = os.path.join(parent_dir, "module1.html")
+        with open(html_path, "r", encoding="utf-8") as f:
+            return f.read()
+    except FileNotFoundError:
+        return HTMLResponse(content="<h1>Module 1 not found</h1>", status_code=404)
+
+@app.get("/module2.html", response_class=HTMLResponse)
+async def module2_page():
+    """Serve Module 2."""
+    try:
+        html_path = os.path.join(parent_dir, "module2.html")
+        with open(html_path, "r", encoding="utf-8") as f:
+            return f.read()
+    except FileNotFoundError:
+        return HTMLResponse(content="<h1>Module 2 not found</h1>", status_code=404)
+
+@app.get("/module3.html", response_class=HTMLResponse)
+async def module3_page():
+    """Serve Module 3."""
+    try:
+        html_path = os.path.join(parent_dir, "module3.html")
+        with open(html_path, "r", encoding="utf-8") as f:
+            return f.read()
+    except FileNotFoundError:
+        return HTMLResponse(content="<h1>Module 3 not found</h1>", status_code=404)
+
+@app.get("/module4.html", response_class=HTMLResponse)
+async def module4_page():
+    """Serve Module 4 - Find Local Care."""
+    try:
+        html_path = os.path.join(parent_dir, "module4.html")
+        with open(html_path, "r", encoding="utf-8") as f:
+            return f.read()
+    except FileNotFoundError:
+        return HTMLResponse(content="<h1>Module 4 not found</h1>", status_code=404)
     
 @app.get("/health")
 async def healthCheck():
