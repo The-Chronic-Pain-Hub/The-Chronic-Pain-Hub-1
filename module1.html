@@ -739,6 +739,28 @@
 
       html += '</div></div>';
 
+      // ============ UNMAPPED/UNIQUE PAIN DESCRIPTORS WARNING ============
+      if (sd.pain_type && sd.pain_type.includes('[Unmapped terms:')) {
+        const unmappedMatch = sd.pain_type.match(/\[Unmapped terms: ([^\]]+)\]/);
+        if (unmappedMatch) {
+          const unmappedTerms = unmappedMatch[1].split(', ');
+          html += '<div class="result-section result-warning">';
+          html += '<h4 style="color: #8c6110;">⚠️ Unique Pain Descriptors (Not in Medical Dictionary)</h4>';
+          html += '<p style="color: #856404; line-height: 1.6; margin-bottom: 12px;">The patient used creative/metaphorical expressions that are not in our standardized pain terminology database. These should be noted for clinical context:</p>';
+          
+          unmappedTerms.forEach(term => {
+            html += `
+              <div style="background: white; padding: 12px 14px; border-radius: 10px; margin-bottom: 10px; border-left: 4px solid var(--accent-sun); box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+                <span style="font-weight: 600; color: var(--ink);">📝 "${term.trim()}"</span>
+              </div>
+            `;
+          });
+          
+          html += '<div style="font-size: 0.85em; color: #856404; margin-top: 10px; font-style: italic; background: rgba(240, 180, 41, 0.08); padding: 10px; border-radius: 8px;">💡 Recommendation: Consider asking follow-up questions to understand these expressions in clinical terms.</div>';
+          html += '</div>';
+        }
+      }
+
       // ============ BIOLORD TERMINOLOGY MAPPINGS (DETAILED) ============
       if (mappings && mappings.length > 0) {
         const confirmedMappings = mappings.filter(m => !m.is_suggestion);
