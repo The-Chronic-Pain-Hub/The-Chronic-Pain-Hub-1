@@ -1,0 +1,10 @@
+data/
+DAIC-WOZ/
+DAIC-WOZ-zips/
+*.wav
+*.mp3
+*.m4a
+__pycache__/
+*.pyc
+.DS_Store
+.env

@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>VoiceScreen — Depression Screening Demo</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #0e0f11;
+      --surface:  #16181c;
+      --border:   #2a2d35;
+      --text:     #e8e9ec;
+      --muted:    #6b7280;
+      --accent:   #4ade80;
+      --warn:     #f97316;
+      --danger:   #f87171;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Mono', monospace;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 60px 24px;
+    }
+
+    /* subtle grid background */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(74,222,128,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(74,222,128,0.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .container {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 680px;
+    }
+
+    header {
+      margin-bottom: 56px;
+      text-align: left;
+      border-left: 3px solid var(--accent);
+      padding-left: 20px;
+    }
+
+    header .eyebrow {
+      font-size: 11px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 10px;
+    }
+
+    header h1 {
+      font-family: 'DM Serif Display', serif;
+      font-size: clamp(32px, 6vw, 48px);
+      line-height: 1.1;
+      color: var(--text);
+    }
+
+    header h1 em {
+      font-style: italic;
+      color: var(--accent);
+    }
+
+    header p {
+      margin-top: 14px;
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.7;
+      max-width: 480px;
+    }
+
+    .disclaimer {
+      background: #1a1208;
+      border: 1px solid #f9731630;
+      border-left: 3px solid var(--warn);
+      border-radius: 6px;
+      padding: 14px 18px;
+      font-size: 12px;
+      color: #f9923a;
+      line-height: 1.6;
+      margin-bottom: 36px;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 32px;
+      margin-bottom: 24px;
+    }
+
+    .card-label {
+      font-size: 10px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 20px;
+    }
+
+    /* Upload zone */
+    .upload-zone {
+      border: 2px dashed var(--border);
+      border-radius: 8px;
+      padding: 40px 24px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+      position: relative;
+    }
+
+    .upload-zone:hover, .upload-zone.drag-over {
+      border-color: var(--accent);
+      background: rgba(74,222,128,0.04);
+    }
+
+    .upload-zone input[type="file"] {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+      width: 100%;
+      height: 100%;
+    }
+
+    .upload-icon {
+      font-size: 32px;
+      margin-bottom: 12px;
+    }
+
+    .upload-zone h3 {
+      font-family: 'DM Serif Display', serif;
+      font-size: 18px;
+      margin-bottom: 6px;
+      color: var(--text);
+    }
+
+    .upload-zone p {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .file-selected {
+      margin-top: 16px;
+      font-size: 12px;
+      color: var(--accent);
+      display: none;
+    }
+
+    /* OR divider */
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin: 20px 0;
+      color: var(--muted);
+      font-size: 11px;
+      letter-spacing: 0.1em;
+    }
+    .divider::before, .divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    /* Record button */
+    .record-area {
+      text-align: center;
+    }
+
+    .record-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-family: 'DM Mono', monospace;
+      font-size: 13px;
+      padding: 12px 28px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .record-btn:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .record-btn.recording {
+      border-color: var(--danger);
+      color: var(--danger);
+      animation: pulse-border 1.2s infinite;
+    }
+
+    @keyframes pulse-border {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(248,113,113,0.4); }
+      50%       { box-shadow: 0 0 0 6px rgba(248,113,113,0); }
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--danger);
+    }
+
+    .recording .dot {
+      animation: blink 1s infinite;
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0.2; }
+    }
+
+    .record-timer {
+      margin-top: 10px;
+      font-size: 11px;
+      color: var(--muted);
+      min-height: 18px;
+    }
+
+    /* Analyze button */
+    .analyze-btn {
+      width: 100%;
+      padding: 16px;
+      background: var(--accent);
+      color: #0a0a0a;
+      border: none;
+      border-radius: 8px;
+      font-family: 'DM Mono', monospace;
+      font-size: 14px;
+      font-weight: 500;
+      letter-spacing: 0.05em;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.1s;
+      margin-top: 8px;
+    }
+
+    .analyze-btn:hover:not(:disabled) {
+      opacity: 0.88;
+      transform: translateY(-1px);
+    }
+
+    .analyze-btn:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+    }
+
+    /* Loading */
+    .loading {
+      display: none;
+      text-align: center;
+      padding: 32px;
+    }
+
+    .loading.visible { display: block; }
+
+    .spinner {
+      width: 36px;
+      height: 36px;
+      border: 2px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto 16px;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .loading p {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .loading-steps {
+      margin-top: 12px;
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .loading-steps span {
+      display: block;
+      margin: 4px 0;
+      opacity: 0;
+      animation: fadeIn 0.5s forwards;
+    }
+
+    .loading-steps span:nth-child(1) { animation-delay: 1s; }
+    .loading-steps span:nth-child(2) { animation-delay: 8s; }
+    .loading-steps span:nth-child(3) { animation-delay: 20s; }
+
+    @keyframes fadeIn { to { opacity: 1; } }
+
+    /* Results */
+    .results {
+      display: none;
+    }
+
+    .results.visible { display: block; }
+
+    .result-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 28px;
+      gap: 16px;
+    }
+
+    .result-label {
+      font-family: 'DM Serif Display', serif;
+      font-size: 36px;
+      line-height: 1;
+    }
+
+    .result-label.positive { color: var(--danger); }
+    .result-label.negative { color: var(--accent); }
+
+    .result-badge {
+      font-size: 10px;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      padding: 4px 10px;
+      border-radius: 4px;
+      margin-top: 6px;
+    }
+
+    .result-badge.positive {
+      background: rgba(248,113,113,0.1);
+      color: var(--danger);
+      border: 1px solid rgba(248,113,113,0.3);
+    }
+
+    .result-badge.negative {
+      background: rgba(74,222,128,0.1);
+      color: var(--accent);
+      border: 1px solid rgba(74,222,128,0.3);
+    }
+
+    /* Probability bars */
+    .prob-row {
+      margin-bottom: 16px;
+    }
+
+    .prob-row-header {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    .prob-row-header span:last-child {
+      color: var(--text);
+      font-weight: 500;
+    }
+
+    .bar-track {
+      height: 6px;
+      background: var(--border);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .bar-fill {
+      height: 100%;
+      border-radius: 3px;
+      transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+      width: 0%;
+    }
+
+    .bar-fill.depression { background: var(--danger); }
+    .bar-fill.healthy    { background: var(--accent); }
+
+    /* Stats grid */
+    .stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 24px;
+    }
+
+    .stat-box {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+    }
+
+    .stat-box .stat-value {
+      font-family: 'DM Serif Display', serif;
+      font-size: 28px;
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+
+    .stat-box .stat-name {
+      font-size: 10px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .reset-btn {
+      width: 100%;
+      padding: 12px;
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      border-radius: 8px;
+      font-family: 'DM Mono', monospace;
+      font-size: 12px;
+      cursor: pointer;
+      margin-top: 20px;
+      transition: all 0.2s;
+    }
+
+    .reset-btn:hover {
+      border-color: var(--text);
+      color: var(--text);
+    }
+
+    footer {
+      margin-top: 48px;
+      font-size: 11px;
+      color: var(--muted);
+      text-align: center;
+      line-height: 1.8;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <div class="eyebrow">Research Demo — v0.1</div>
+    <h1>Voice<em>Screen</em></h1>
+    <p>Depression screening via acoustic biomarker analysis. Upload or record a voice sample to analyze vocal patterns using a wav2vec2-based classifier trained on the DAIC-WOZ dataset.</p>
+  </header>
+
+  <div class="disclaimer">
+    ⚠ This is a research prototype only. Not intended for clinical use or medical diagnosis. All predictions should be interpreted by a qualified clinician.
+  </div>
+
+  <!-- Input card -->
+  <div class="card" id="input-card">
+    <div class="card-label">01 — Provide Audio Sample</div>
+
+    <div class="upload-zone" id="upload-zone">
+      <input type="file" id="file-input" accept=".wav,.mp3,.m4a,.ogg,.flac"/>
+      <div class="upload-icon">📁</div>
+      <h3>Drop audio file here</h3>
+      <p>Supports .wav, .mp3, .m4a — minimum 30 seconds recommended</p>
+      <div class="file-selected" id="file-selected">— file selected —</div>
+    </div>
+
+    <div class="divider">or record live</div>
+
+    <div class="record-area">
+      <button class="record-btn" id="record-btn">
+        <div class="dot"></div>
+        <span id="record-label">Start Recording</span>
+      </button>
+      <div class="record-timer" id="record-timer"></div>
+    </div>
+
+    <br/>
+    <button class="analyze-btn" id="analyze-btn" disabled>
+      Analyze Voice Sample →
+    </button>
+  </div>
+
+  <!-- Loading -->
+  <div class="card loading" id="loading">
+    <div class="spinner"></div>
+    <p>Analyzing audio...</p>
+    <div class="loading-steps">
+      <span>→ preprocessing audio waveform</span>
+      <span>→ extracting wav2vec2 embeddings</span>
+      <span>→ running classifier inference</span>
+    </div>
+  </div>
+
+  <!-- Results -->
+  <div class="card results" id="results">
+    <div class="card-label">02 — Analysis Results</div>
+
+    <div class="result-header">
+      <div>
+        <div class="result-label" id="result-label">—</div>
+        <div class="result-badge" id="result-badge">—</div>
+      </div>
+    </div>
+
+    <div class="prob-row">
+      <div class="prob-row-header">
+        <span>Depression probability</span>
+        <span id="dep-pct">—</span>
+      </div>
+      <div class="bar-track">
+        <div class="bar-fill depression" id="dep-bar"></div>
+      </div>
+    </div>
+
+    <div class="prob-row">
+      <div class="prob-row-header">
+        <span>No depression probability</span>
+        <span id="nodep-pct">—</span>
+      </div>
+      <div class="bar-track">
+        <div class="bar-fill healthy" id="nodep-bar"></div>
+      </div>
+    </div>
+
+    <div class="stats">
+      <div class="stat-box">
+        <div class="stat-value" id="conf-val">—</div>
+        <div class="stat-name">Model Confidence</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-value">wav2vec2</div>
+        <div class="stat-name">Feature Extractor</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-value">107</div>
+        <div class="stat-name">Training Participants</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-value">73%</div>
+        <div class="stat-name">Model Accuracy</div>
+      </div>
+    </div>
+
+    <button class="reset-btn" id="reset-btn">← Analyze another sample</button>
+  </div>
+
+  <footer>
+    Built on DAIC-WOZ · USC Institute for Creative Technologies<br/>
+    wav2vec2-base-960h · Logistic Regression + PCA · Research use only
+  </footer>
+
+</div>
+
+<script>
+  const API = "http://localhost:8000";
+
+  let audioBlob = null;
+  let mediaRecorder = null;
+  let recordingChunks = [];
+  let timerInterval = null;
+  let seconds = 0;
+
+  const fileInput    = document.getElementById("file-input");
+  const fileSelected = document.getElementById("file-selected");
+  const uploadZone   = document.getElementById("upload-zone");
+  const recordBtn    = document.getElementById("record-btn");
+  const recordLabel  = document.getElementById("record-label");
+  const recordTimer  = document.getElementById("record-timer");
+  const analyzeBtn   = document.getElementById("analyze-btn");
+  const inputCard    = document.getElementById("input-card");
+  const loading      = document.getElementById("loading");
+  const results      = document.getElementById("results");
+  const resetBtn     = document.getElementById("reset-btn");
+
+  // Drag and drop
+  uploadZone.addEventListener("dragover", e => {
+    e.preventDefault();
+    uploadZone.classList.add("drag-over");
+  });
+  uploadZone.addEventListener("dragleave", () => uploadZone.classList.remove("drag-over"));
+  uploadZone.addEventListener("drop", e => {
+    e.preventDefault();
+    uploadZone.classList.remove("drag-over");
+    const file = e.dataTransfer.files[0];
+    if (file) handleFile(file);
+  });
+
+  fileInput.addEventListener("change", () => {
+    if (fileInput.files[0]) handleFile(fileInput.files[0]);
+  });
+
+  function handleFile(file) {
+    audioBlob = file;
+    fileSelected.style.display = "block";
+    fileSelected.textContent   = `✓ ${file.name} (${(file.size/1024/1024).toFixed(1)} MB)`;
+    analyzeBtn.disabled = false;
+  }
+
+  // Recording
+  recordBtn.addEventListener("click", async () => {
+    if (mediaRecorder && mediaRecorder.state === "recording") {
+      mediaRecorder.stop();
+      return;
+    }
+
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    mediaRecorder    = new MediaRecorder(stream);
+    recordingChunks  = [];
+
+    mediaRecorder.ondataavailable = e => recordingChunks.push(e.data);
+    mediaRecorder.onstop = () => {
+      audioBlob = new Blob(recordingChunks, { type: "audio/wav" });
+      clearInterval(timerInterval);
+      recordTimer.textContent  = `Recording saved (${seconds}s)`;
+      recordBtn.classList.remove("recording");
+      recordLabel.textContent  = "Record Again";
+      analyzeBtn.disabled      = false;
+      stream.getTracks().forEach(t => t.stop());
+    };
+
+    mediaRecorder.start();
+    recordBtn.classList.add("recording");
+    recordLabel.textContent = "Stop Recording";
+    seconds = 0;
+    recordTimer.textContent = "0s";
+    timerInterval = setInterval(() => {
+      seconds++;
+      recordTimer.textContent = `${seconds}s`;
+    }, 1000);
+  });
+
+  // Analyze
+  analyzeBtn.addEventListener("click", async () => {
+    if (!audioBlob) return;
+
+    inputCard.style.display = "none";
+    loading.classList.add("visible");
+
+    const form = new FormData();
+    form.append("file", audioBlob, audioBlob.name || "recording.wav");
+
+    try {
+      const res  = await fetch(`${API}/analyze`, { method: "POST", body: form });
+      const data = await res.json();
+
+      if (data.error) throw new Error(data.error);
+
+      showResults(data);
+    } catch (err) {
+      loading.classList.remove("visible");
+      inputCard.style.display = "block";
+      alert("Error: " + err.message + "\n\nMake sure the API server is running:\nuvicorn api:app --reload");
+    }
+  });
+
+  function showResults(data) {
+    loading.classList.remove("visible");
+    results.classList.add("visible");
+
+    const isDepressed = data.prediction === 1;
+    const cls         = isDepressed ? "positive" : "negative";
+
+    document.getElementById("result-label").textContent  = data.label;
+    document.getElementById("result-label").className    = `result-label ${cls}`;
+    document.getElementById("result-badge").textContent  = isDepressed ? "Risk Detected" : "No Risk Detected";
+    document.getElementById("result-badge").className    = `result-badge ${cls}`;
+
+    const depPct   = Math.round(data.depression_probability * 100);
+    const nodepPct = Math.round(data.no_depression_probability * 100);
+    const confPct  = Math.round(data.confidence * 100);
+
+    document.getElementById("dep-pct").textContent   = `${depPct}%`;
+    document.getElementById("nodep-pct").textContent = `${nodepPct}%`;
+    document.getElementById("conf-val").textContent  = `${confPct}%`;
+
+    // Animate bars after short delay
+    setTimeout(() => {
+      document.getElementById("dep-bar").style.width   = `${depPct}%`;
+      document.getElementById("nodep-bar").style.width = `${nodepPct}%`;
+    }, 100);
+  }
+
+  resetBtn.addEventListener("click", () => {
+    results.classList.remove("visible");
+    inputCard.style.display = "block";
+    audioBlob               = null;
+    fileSelected.style.display = "none";
+    fileInput.value         = "";
+    recordTimer.textContent = "";
+    recordLabel.textContent = "Start Recording";
+    analyzeBtn.disabled     = true;
+    document.getElementById("dep-bar").style.width   = "0%";
+    document.getElementById("nodep-bar").style.width = "0%";
+  });
+</script>
+</body>
+</html>
