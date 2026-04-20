@@ -1,0 +1,824 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Module 1 | The Chronic Pain Hub</title>
+  <meta name="description" content="Module 1 converts cultural metaphors and native-language narratives into clinician-ready summaries." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@400;600;700&family=Sora:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    /* Module 1 specific styles - matching Chronic Pain Hub design system */
+    .pain-tool-section {
+      background: linear-gradient(135deg, rgba(237, 106, 90, 0.03) 0%, rgba(47, 127, 125, 0.05) 100%);
+      padding: 60px 0 80px;
+      border-top: 1px solid var(--border);
+    }
+
+    .tool-grid {
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 24px;
+      margin-top: 32px;
+    }
+
+    .input-card {
+      background: var(--surface);
+      border-radius: 24px;
+      padding: 28px;
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-soft);
+    }
+
+    .input-card h3 {
+      font-family: "Fraunces", serif;
+      font-size: 1.4rem;
+      margin-bottom: 18px;
+      color: var(--ink);
+    }
+
+    .input-label {
+      font-weight: 600;
+      margin-bottom: 10px;
+      display: block;
+      color: var(--ink-soft);
+      font-size: 0.95rem;
+    }
+
+    .pain-textarea {
+      width: 100%;
+      min-height: 140px;
+      padding: 16px;
+      border: 2px solid var(--border);
+      border-radius: 16px;
+      background: #fffaf4;
+      font-family: "Sora", sans-serif;
+      font-size: 1rem;
+      color: var(--ink);
+      resize: vertical;
+      transition: border-color 0.3s ease;
+      line-height: 1.6;
+    }
+
+    .pain-textarea:focus {
+      outline: none;
+      border-color: var(--accent-cool);
+      background: #ffffff;
+    }
+
+    .pain-textarea::placeholder {
+      color: var(--ink-muted);
+      opacity: 0.6;
+    }
+
+    .example-pills {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 12px;
+    }
+
+    .example-pill {
+      padding: 7px 14px;
+      border-radius: 999px;
+      background: var(--surface-muted);
+      border: 1px solid var(--border);
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      color: var(--ink-soft);
+    }
+
+    .example-pill:hover {
+      background: var(--accent);
+      color: white;
+      border-color: var(--accent);
+      transform: translateY(-2px);
+    }
+
+    .action-button {
+      background: var(--accent);
+      color: white;
+      border: none;
+      padding: 14px 28px;
+      border-radius: 999px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 12px rgba(237, 106, 90, 0.3);
+      font-family: "Sora", sans-serif;
+      width: 100%;
+      margin-top: 18px;
+    }
+
+    .action-button:hover {
+      background: var(--accent-strong);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(237, 106, 90, 0.4);
+    }
+
+    .action-button:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    .voice-card {
+      background: linear-gradient(135deg, rgba(47, 127, 125, 0.08), rgba(47, 127, 125, 0.03));
+      border: 2px dashed var(--accent-cool);
+      border-radius: 20px;
+      padding: 20px;
+      margin-top: 20px;
+    }
+
+    .voice-card-title {
+      font-weight: 600;
+      color: var(--accent-cool);
+      margin-bottom: 12px;
+      font-size: 0.95rem;
+    }
+
+    .voice-controls {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .voice-button {
+      background: var(--accent-cool);
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 999px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-size: 0.9rem;
+    }
+
+    .voice-button:hover {
+      background: #246361;
+      transform: translateY(-2px);
+    }
+
+    .voice-button.recording {
+      background: var(--accent);
+      animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.7; }
+    }
+
+    .voice-status {
+      color: var(--ink-muted);
+      font-size: 0.9rem;
+    }
+
+    .audio-playback {
+      width: 100%;
+      margin-top: 12px;
+      border-radius: 12px;
+    }
+
+    .results-card {
+      background: var(--surface);
+      border-radius: 24px;
+      padding: 28px;
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-soft);
+      max-height: 800px;
+      overflow-y: auto;
+    }
+
+    .results-card h3 {
+      font-family: "Fraunces", serif;
+      font-size: 1.4rem;
+      margin-bottom: 18px;
+      color: var(--ink);
+    }
+
+    .results-empty {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--ink-muted);
+    }
+
+    .results-empty svg {
+      width: 80px;
+      height: 80px;
+      margin: 0 auto 20px;
+      opacity: 0.3;
+    }
+
+    .loading-spinner {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 20px;
+      gap: 16px;
+    }
+
+    .spinner {
+      border: 4px solid rgba(237, 106, 90, 0.1);
+      border-top: 4px solid var(--accent);
+      border-radius: 50%;
+      width: 50px;
+      height: 50px;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .result-section {
+      background: var(--surface);
+      border-radius: 18px;
+      padding: 20px;
+      margin-bottom: 16px;
+      border: 1px solid var(--border);
+    }
+
+    .result-section h4 {
+      font-family: "Fraunces", serif;
+      font-size: 1.1rem;
+      margin-bottom: 14px;
+      color: var(--ink);
+    }
+
+    .result-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+
+    .result-item {
+      background: linear-gradient(140deg, #fff9f2, #fff);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 14px;
+    }
+
+    .result-item-label {
+      font-size: 0.85rem;
+      color: var(--ink-muted);
+      margin-bottom: 6px;
+    }
+
+    .result-item-value {
+      font-weight: 600;
+      color: var(--ink);
+      font-size: 1.05rem;
+    }
+
+    .result-highlight {
+      background: linear-gradient(135deg, rgba(237, 106, 90, 0.08), rgba(237, 106, 90, 0.03));
+      border-left: 4px solid var(--accent);
+    }
+
+    .result-warning {
+      background: linear-gradient(135deg, rgba(240, 180, 41, 0.08), rgba(240, 180, 41, 0.03));
+      border-left: 4px solid var(--accent-sun);
+    }
+
+    .result-info {
+      background: linear-gradient(135deg, rgba(47, 127, 125, 0.08), rgba(47, 127, 125, 0.03));
+      border-left: 4px solid var(--accent-cool);
+    }
+
+    details {
+      cursor: pointer;
+      user-select: none;
+      margin-top: 12px;
+    }
+
+    details summary {
+      padding: 10px 14px;
+      border-radius: 12px;
+      background: var(--surface-muted);
+      font-weight: 600;
+      color: var(--ink-soft);
+      transition: background 0.2s;
+    }
+
+    details summary:hover {
+      background: #e8dfd2;
+    }
+
+    details[open] summary {
+      margin-bottom: 12px;
+    }
+
+    .detail-content {
+      padding: 14px;
+      background: #fffaf4;
+      border-radius: 12px;
+      margin-top: 8px;
+      font-size: 0.9rem;
+      line-height: 1.6;
+      color: var(--ink-muted);
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .badge-neuropathic {
+      background: rgba(237, 106, 90, 0.15);
+      color: var(--accent-strong);
+    }
+
+    .badge-nociceptive {
+      background: rgba(47, 127, 125, 0.15);
+      color: var(--accent-cool);
+    }
+
+    .badge-affective {
+      background: rgba(240, 180, 41, 0.18);
+      color: #8c6110;
+    }
+
+    /* Responsive */
+    @media (max-width: 968px) {
+      .tool-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Scrollbar styling for results */
+    .results-card::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    .results-card::-webkit-scrollbar-track {
+      background: var(--surface-muted);
+      border-radius: 10px;
+    }
+
+    .results-card::-webkit-scrollbar-thumb {
+      background: var(--accent);
+      border-radius: 10px;
+    }
+
+    .results-card::-webkit-scrollbar-thumb:hover {
+      background: var(--accent-strong);
+    }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <div class="container header-inner">
+      <div class="logo-container">
+        <img src="universityofwisconsinmadisonlogo.png" alt="University of Wisconsin Madison" class="uw-logo">
+        <a href="index.html" class="logo-text">The Chronic Pain Hub</a>
+        <img src="Lab_logo.png" alt="Lab Logo" class="lab-logo">
+      </div>
+      <nav class="nav-links">
+        <a href="index.html#modules">Modules</a>
+        <a href="index.html#how">How It Works</a>
+        <a href="module4.html">Find Local Care</a>
+        <a class="cta-button" href="module1.html">Start Building Your Story</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="module-hero">
+      <div class="container hero-grid">
+        <div>
+          <p class="hero-eyebrow">Module 1</p>
+          <h1>Semantic Translator and Pre-Visit Builder</h1>
+          <p>Goal: convert cultural metaphors and native-language narratives into medical ontologies that clinicians can act on.</p>
+          <div class="module-links">
+            <a href="module2.html">Next: Visual Expression</a>
+            <a href="module3.html">Jump to Bio-Acoustic</a>
+          </div>
+        </div>
+        <div class="hero-card">
+          <p class="panel-title">Primary outputs</p>
+          <ul>
+            <li>One-page visit summary</li>
+            <li>Pain phenotype profile</li>
+            <li>Top concerns and key questions</li>
+            <li>Optional emotional context flags</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="module-content">
+      <div class="container content-grid">
+        <div>
+          <h2>How it works</h2>
+          <p>The translator goes beyond literal translation. It uses cross-lingual NLU to map metaphors and narratives into structured clinical descriptors.</p>
+          <p>Example: if a patient says "pain like a ghost in the marrow," the AI generates a clinician-facing note: "Patient describes deep, non-localized somatic distress (McGill Category: Affective/Exhausting)."</p>
+          <h2>Core functions</h2>
+          <ul>
+            <li>Write or speak in preferred language</li>
+            <li>Guided prompts with adaptive questioning</li>
+            <li>Location selection using a body map</li>
+            <li>Animation-based pain quality selection</li>
+            <li>Context prompts for sleep, stress, food, flare pattern</li>
+          </ul>
+        </div>
+        <div>
+          <div class="info-card reveal">
+            <h3>AI layer</h3>
+            <ul>
+              <li>Cross-lingual semantic mapping (not literal translation)</li>
+              <li>Metaphor detection and clarification prompts</li>
+              <li>Structured clinical summary generation</li>
+            </ul>
+          </div>
+          <div class="info-card reveal" style="margin-top: 18px;">
+            <h3>Problem fit</h3>
+            <ul>
+              <li>Hard to think of responses during visits</li>
+              <li>Translation loses meaning or intent</li>
+              <li>Numbers do not translate pain</li>
+              <li>Symptoms are misinterpreted</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Interactive Pain Assessment Tool -->
+    <section class="pain-tool-section">
+      <div class="container">
+        <div style="text-align: center; margin-bottom: 20px;">
+          <h2 style="font-family: 'Fraunces', serif; font-size: 2.2rem; margin-bottom: 12px;">Try the Pain Assessment Tool</h2>
+          <p style="color: var(--ink-muted); max-width: 600px; margin: 0 auto;">
+            Describe your pain in your own words, any language. Our AI will translate it into clinical terminology.
+          </p>
+        </div>
+
+        <div class="tool-grid">
+          <!-- Input Column -->
+          <div>
+            <div class="input-card">
+              <h3>Describe Your Pain</h3>
+              
+              <label class="input-label">Write or speak your pain description</label>
+              <textarea 
+                id="painInput" 
+                class="pain-textarea" 
+                placeholder="Example: I've had constant electric-shock-like pain in my lower back for 4 months, can't sleep at night, feeling very depressed...&#10;&#10;例子：最近四个月腰部到腿部总是像触电一样的麻痛，晚上痛得睡不着，心情很郁闷"></textarea>
+
+              <div class="example-pills">
+                <span class="example-pill" onclick="loadExample('english')">🇺🇸 English Example</span>
+                <span class="example-pill" onclick="loadExample('chinese')">🇨🇳 Chinese Example</span>
+                <span class="example-pill" onclick="loadExample('korean')">🇰🇷 Korean Example</span>
+                <span class="example-pill" onclick="loadExample('spanish')">🇪🇸 Spanish Example</span>
+              </div>
+
+              <button id="analyzeBtn" class="action-button" onclick="analyzePain()">
+                🔬 Analyze Pain Description
+              </button>
+
+              <!-- Voice Recording -->
+              <div class="voice-card">
+                <div class="voice-card-title">🎙️ Or record your voice</div>
+                <div class="voice-controls">
+                  <button id="recordBtn" class="voice-button" onclick="toggleRecording()">
+                    Start Recording
+                  </button>
+                  <span id="recordStatus" class="voice-status">Ready to record</span>
+                </div>
+                <audio id="audioPlayback" class="audio-playback" controls style="display: none;"></audio>
+              </div>
+            </div>
+          </div>
+
+          <!-- Results Column -->
+          <div>
+            <div class="results-card" id="resultsCard">
+              <h3>Analysis Results</h3>
+              <div class="results-empty" id="resultsEmpty">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                </svg>
+                <p>Your pain assessment results will appear here</p>
+              </div>
+              <div id="resultsContent" style="display: none;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-grid">
+      <div>
+        <p class="logo">The Chronic Pain Hub</p>
+        <p>A multimodal pain communication and navigation platform.</p>
+      </div>
+      <div>
+        <p><strong>Explore</strong></p>
+        <p><a href="module2.html">Visual Expression</a></p>
+        <p><a href="module3.html">Bio-Acoustic Capture</a></p>
+        <p><a href="module4.html">Pain Navigation</a></p>
+      </div>
+      <div>
+        <p><strong>Contact</strong></p>
+        <p>Email: info@chronicpainhub.org</p>
+        <p>Serving Wisconsin communities</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+  <script>
+    const API_BASE = '';  // Same origin - works for both localhost and production
+
+    // Example pain descriptions in multiple languages
+    const examples = {
+      english: "I've had constant electric-shock-like tingling pain in my lower back and legs for 4 months. The pain wakes me up at night, I can't sleep properly. Feeling exhausted and depressed.",
+      chinese: "最近四个月腰部到腿部总是像触电一样的麻痛，晚上痛得睡不着，心情很郁闷。感觉整个人都很疲惫。",
+      korean: "허리와 다리가 최근 4개월 동안 계속 찌릿찌릿 아파요. 밤에 잠도 제대로 못 자고 우울한 기분이 듭니다.",
+      spanish: "He tenido un dolor constante como descargas eléctricas en la espalda baja y las piernas durante 4 meses. El dolor me despierta por la noche, no puedo dormir bien. Me siento agotado y deprimido."
+    };
+
+    function loadExample(lang) {
+      document.getElementById('painInput').value = examples[lang];
+    }
+
+    async function analyzePain() {
+      const text = document.getElementById('painInput').value.trim();
+      if (!text) {
+        alert('Please enter a pain description');
+        return;
+      }
+
+      const resultsEmpty = document.getElementById('resultsEmpty');
+      const resultsContent = document.getElementById('resultsContent');
+      const btn = document.getElementById('analyzeBtn');
+      
+      btn.disabled = true;
+      resultsEmpty.style.display = 'none';
+      resultsContent.style.display = 'block';
+      resultsContent.innerHTML = '<div class="loading-spinner"><div class="spinner"></div><p>Analyzing your pain description...</p></div>';
+
+      try {
+        const response = await fetch(`${API_BASE}/api/analyze-text-neuro-symbolic`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text })
+        });
+
+        const data = await response.json();
+
+        if (data.status === 'success') {
+          displayResults(data);
+        } else {
+          resultsContent.innerHTML = `
+            <div class="result-section result-warning">
+              <h4>⚠️ Analysis Error</h4>
+              <p>${data.message || 'Unable to analyze the pain description. Please try again.'}</p>
+            </div>
+          `;
+        }
+      } catch (error) {
+        resultsContent.innerHTML = `
+          <div class="result-section result-warning">
+            <h4>❌ Connection Error</h4>
+            <p>Unable to connect to the backend server. Please make sure it's running.</p>
+            <p style="font-size: 0.85rem; margin-top: 8px; opacity: 0.7;">${error.message}</p>
+          </div>
+        `;
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    function displayResults(data) {
+      const resultsContent = document.getElementById('resultsContent');
+      const sd = data.structured_data || {};
+      const mappings = data.ontology_mapping_trace || [];
+      const recommendations = data.clinical_recommendations || [];
+
+      let html = '';
+
+      // Main Pain Assessment Card
+      html += '<div class="result-section result-highlight">';
+      html += '<h4>🩺 Pain Assessment</h4>';
+      html += '<div class="result-grid">';
+      
+      if (sd.pain_type) {
+        const painType = sd.pain_type.split('[')[0].trim(); // Remove unmapped terms from display
+        const badgeClass = painType.toLowerCase().includes('neuropathic') ? 'badge-neuropathic' : 
+                          painType.toLowerCase().includes('nociceptive') ? 'badge-nociceptive' : 'badge-affective';
+        html += `
+          <div class="result-item">
+            <div class="result-item-label">Pain Type</div>
+            <div class="result-item-value">
+              ${painType} <span class="${badgeClass}" style="font-size: 0.7rem; margin-left: 6px;">${painType.split(' ')[0]}</span>
+            </div>
+          </div>
+        `;
+      }
+
+      if (sd.location && sd.location !== 'Not specified') {
+        html += `
+          <div class="result-item">
+            <div class="result-item-label">📍 Location</div>
+            <div class="result-item-value">${sd.location}</div>
+          </div>
+        `;
+      }
+
+      if (sd.temporal_pattern && sd.temporal_pattern !== 'Not specified') {
+        html += `
+          <div class="result-item">
+            <div class="result-item-label">⏱️ Pattern</div>
+            <div class="result-item-value">${sd.temporal_pattern}</div>
+          </div>
+        `;
+      }
+
+      if (sd.intensity && sd.intensity !== 'Not stated') {
+        html += `
+          <div class="result-item">
+            <div class="result-item-label">💪 Intensity</div>
+            <div class="result-item-value">${sd.intensity}</div>
+          </div>
+        `;
+      }
+
+      if (sd.emotion && sd.emotion !== 'None detected') {
+        html += `
+          <div class="result-item" style="grid-column: 1 / -1;">
+            <div class="result-item-label">😔 Emotional Impact</div>
+            <div class="result-item-value">${sd.emotion}</div>
+          </div>
+        `;
+      }
+
+      if (sd.functional_impact && sd.functional_impact !== 'Not stated') {
+        html += `
+          <div class="result-item" style="grid-column: 1 / -1;">
+            <div class="result-item-label">🚶 Functional Impact</div>
+            <div class="result-item-value">${sd.functional_impact}</div>
+          </div>
+        `;
+      }
+
+      html += '</div></div>';
+
+      // Clinical Recommendations
+      if (recommendations && recommendations.length > 0) {
+        html += '<div class="result-section result-info">';
+        html += '<h4>💡 Clinical Recommendations</h4>';
+        recommendations.forEach((rec, index) => {
+          html += `
+            <div style="background: rgba(255,255,255,0.6); padding: 14px; border-radius: 12px; margin-bottom: ${index < recommendations.length - 1 ? '10px' : '0'}; border-left: 3px solid var(--accent-cool);">
+              <div style="font-weight: 600; margin-bottom: 6px; color: var(--ink);">${rec.triggered_by_rule || 'Recommendation'}</div>
+              <div style="color: var(--ink-muted); line-height: 1.5;">${rec.recommendation}</div>
+            </div>
+          `;
+        });
+        html += '</div>';
+      }
+
+      // Physician Summary (if available)
+      if (data.physician_summary) {
+        html += '<div class="result-section">';
+        html += '<h4>📋 Clinical Summary</h4>';
+        html += '<div class="detail-content" style="line-height: 1.7;">';
+        let summary = data.physician_summary
+          .replace(/## (.+)/g, '<strong style="color: var(--ink); font-size: 1.05em; display: block; margin: 16px 0 8px;">$1</strong>')
+          .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+          .replace(/\n\n/g, '<br><br>')
+          .replace(/^- (.+)$/gm, '<li style="margin-left: 20px;">$1</li>');
+        html += summary;
+        html += '</div></div>';
+      }
+
+      // Terminology Mappings (collapsible)
+      if (mappings && mappings.length > 0) {
+        const confirmedMappings = mappings.filter(m => !m.is_suggestion);
+        html += '<details>';
+        html += `<summary>🔬 Terminology Mapping Details (${confirmedMappings.length} matches)</summary>`;
+        html += '<div class="detail-content">';
+        confirmedMappings.forEach(m => {
+          html += `
+            <div style="padding: 10px; background: white; border-radius: 8px; margin-bottom: 8px; border-left: 3px solid var(--accent-cool);">
+              <strong>"${m.original_term || m.chinese_input}"</strong> → <strong style="color: var(--accent-cool);">${m.mapped_english}</strong>
+              <span class="badge badge-${m.pain_type || 'affective'}" style="margin-left: 8px; font-size: 0.7rem;">${m.pain_type || m.dimension}</span>
+            </div>
+          `;
+        });
+        html += '</div></details>';
+      }
+
+      resultsContent.innerHTML = html;
+    }
+
+    // Audio Recording Functions
+    let mediaRecorder;
+    let audioChunks = [];
+
+    async function toggleRecording() {
+      const btn = document.getElementById('recordBtn');
+      const status = document.getElementById('recordStatus');
+      const audioPlayback = document.getElementById('audioPlayback');
+
+      if (!mediaRecorder || mediaRecorder.state === 'inactive') {
+        // Start recording
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          mediaRecorder = new MediaRecorder(stream);
+          audioChunks = [];
+
+          mediaRecorder.ondataavailable = (event) => {
+            audioChunks.push(event.data);
+          };
+
+          mediaRecorder.onstop = async () => {
+            const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+            const audioUrl = URL.createObjectURL(audioBlob);
+            
+            audioPlayback.src = audioUrl;
+            audioPlayback.style.display = 'block';
+            
+            status.textContent = 'Processing audio...';
+            
+            await analyzeAudio(audioBlob);
+          };
+
+          mediaRecorder.start();
+          btn.textContent = '⏹️ Stop Recording';
+          btn.classList.add('recording');
+          status.textContent = 'Recording... speak now';
+        } catch (error) {
+          alert('Microphone access denied: ' + error.message);
+        }
+      } else {
+        // Stop recording
+        mediaRecorder.stop();
+        mediaRecorder.stream.getTracks().forEach(track => track.stop());
+        btn.textContent = 'Start Recording';
+        btn.classList.remove('recording');
+        status.textContent = 'Analyzing...';
+      }
+    }
+
+    async function analyzeAudio(audioBlob) {
+      const resultsEmpty = document.getElementById('resultsEmpty');
+      const resultsContent = document.getElementById('resultsContent');
+      const status = document.getElementById('recordStatus');
+
+      resultsEmpty.style.display = 'none';
+      resultsContent.style.display = 'block';
+      resultsContent.innerHTML = '<div class="loading-spinner"><div class="spinner"></div><p>Transcribing and analyzing audio...</p></div>';
+
+      try {
+        const formData = new FormData();
+        formData.append('file', audioBlob, 'recording.webm');
+
+        const response = await fetch(`${API_BASE}/api/analyze-audio-neuro-symbolic`, {
+          method: 'POST',
+          body: formData
+        });
+
+        const data = await response.json();
+
+        if (data.status === 'success') {
+          displayResults(data);
+          status.textContent = 'Analysis complete';
+        } else {
+          resultsContent.innerHTML = `
+            <div class="result-section result-warning">
+              <h4>❌ Error</h4>
+              <p>${data.message}</p>
+            </div>
+          `;
+          status.textContent = 'Analysis failed';
+        }
+      } catch (error) {
+        resultsContent.innerHTML = `
+          <div class="result-section result-warning">
+            <h4>❌ Connection Error</h4>
+            <p>${error.message}</p>
+          </div>
+        `;
+        status.textContent = 'Connection error';
+      }
+    }
+  </script>
+</body>
+</html>

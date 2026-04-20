@@ -45,14 +45,14 @@ app.mount("/images", StaticFiles(directory="images"), name="images")
 # Serve frontend HTML
 @app.get("/", response_class=HTMLResponse)
 async def root():
-    """Serve the frontend demo page."""
+    """Serve the Module 1 pain assessment page."""
     try:
-        html_path = os.path.join(os.path.dirname(__file__), "../Frontend/demo.html")
+        html_path = os.path.join(os.path.dirname(__file__), "../module1.html")
         with open(html_path, "r", encoding="utf-8") as f:
             return f.read()
     except FileNotFoundError:
         return HTMLResponse(
-            content="<h1>Frontend not found</h1><p>API is running at /api/*</p>",
+            content="<h1>Frontend not found</h1><p>API is running at /api/*</p><p>Make sure module1.html exists</p>",
             status_code=404
         )
     
