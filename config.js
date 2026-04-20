@@ -17,7 +17,7 @@ const getApiBase = () => {
   
   // If running from a remote server (e.g., GitHub Pages, ngrok-served HTML)
   // Return the ngrok URL or your production backend URL
-  return 'http://localhost:8000';  // ⚠️ CHANGE THIS to your ngrok URL
+  return 'https://beatriz-steamy-caroline.ngrok-free.dev';  // ⚠️ CHANGE THIS to your ngrok URL
 };
 
 // Export the API base URL
