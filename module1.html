@@ -186,6 +186,77 @@
       border-radius: 12px;
     }
 
+    .speech-results-card {
+      background: var(--surface);
+      border-radius: 24px;
+      padding: 28px;
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-soft);
+      max-height: 900px;
+      overflow-y: auto;
+    }
+
+    .speech-results-card h4 {
+      font-family: "Fraunces", serif;
+      font-size: 1.2rem;
+      margin-bottom: 16px;
+      color: var(--ink);
+    }
+
+    /* Scrollbar styling for left panel */
+    .speech-results-card::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    .speech-results-card::-webkit-scrollbar-track {
+      background: var(--surface-muted);
+      border-radius: 10px;
+    }
+
+    .speech-results-card::-webkit-scrollbar-thumb {
+      background: var(--accent-cool);
+      border-radius: 10px;
+    }
+
+    .speech-results-card::-webkit-scrollbar-thumb:hover {
+      background: #246361;
+    }
+
+    .speech-section {
+      background: #f8f9fa;
+      border-radius: 16px;
+      padding: 18px;
+      margin-bottom: 16px;
+    }
+
+    .speech-section-title {
+      font-weight: 600;
+      font-size: 1rem;
+      color: var(--ink-soft);
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .speech-section-content {
+      background: white;
+      border-radius: 12px;
+      padding: 14px;
+      font-size: 0.95rem;
+      line-height: 1.6;
+      color: var(--ink);
+      border: 1px solid var(--border);
+    }
+
+    .speech-arrow {
+      text-align: center;
+      padding: 8px 0;
+      color: var(--accent);
+      font-size: 1.5rem;
+      font-weight: bold;
+    }
+
     .results-card {
       background: var(--surface);
       border-radius: 24px;
@@ -480,8 +551,9 @@
         </div>
 
         <div class="tool-grid">
-          <!-- Input Column -->
+          <!-- Left Column: Input + Speech Results -->
           <div>
+            <!-- Input Card -->
             <div class="input-card">
               <h3>Describe Your Pain</h3>
               
@@ -514,9 +586,14 @@
                 <audio id="audioPlayback" class="audio-playback" controls style="display: none;"></audio>
               </div>
             </div>
+
+            <!-- Speech Recognition Results (New) -->
+            <div class="speech-results-card" id="speechResultsCard" style="display: none;">
+              <div id="speechResultsContent"></div>
+            </div>
           </div>
 
-          <!-- Results Column -->
+          <!-- Right Column: Analysis Results -->
           <div>
             <div class="results-card" id="resultsCard">
               <h3>Analysis Results</h3>
@@ -622,88 +699,149 @@
 
     function displayResults(data) {
       const resultsContent = document.getElementById('resultsContent');
+      const speechResultsCard = document.getElementById('speechResultsCard');
+      const speechResultsContent = document.getElementById('speechResultsContent');
       const sd = data.structured_data || {};
       const mappings = data.ontology_mapping_trace || [];
       const recommendations = data.clinical_recommendations || [];
-      const reasoning = data.reasoning_chain || [];
       const transcription = data.transcription || null;
+      const physicianSummary = data.physician_summary || '';
+      const biolordAnalysis = data.biolord_comprehensive_analysis || null;
 
-      // ============ RIGHT PANEL: PHYSICIAN SUMMARY (GPT REPORT) ============
-      let reportHtml = '';
-      if (data.physician_summary) {
-        reportHtml += '<div style="position: sticky; top: 20px;">';
-        reportHtml += '<div class="result-section" style="background: linear-gradient(135deg, rgba(47, 127, 125, 0.08), rgba(47, 127, 125, 0.03)); border-left: 4px solid var(--accent-cool);">';
-        reportHtml += '<h4 style="color: var(--accent-cool); display: flex; align-items: center; gap: 8px;"><span>📋</span> Physician Summary Report</h4>';
-        reportHtml += '<div class="detail-content" style="line-height: 1.8; background: white; padding: 18px; border-radius: 12px;">';
+      // ============ LEFT PANEL: COMPLETE PIPELINE INTERMEDIATE STEPS ============
+      let leftPanelHtml = '';
+      
+      // 1. Speech Recognition (if audio input)
+      if (transcription && transcription.original && transcription.normalized && transcription.original !== transcription.normalized) {
+        leftPanelHtml += '<div style="background: linear-gradient(135deg, rgba(47, 127, 125, 0.08), rgba(47, 127, 125, 0.03)); border: 2px solid var(--accent-cool); border-radius: 16px; padding: 18px; margin-bottom: 20px;">';
+        leftPanelHtml += '<h4 style="font-family: Fraunces, serif; margin-bottom: 14px; color: var(--accent-cool);">🎤 Speech Recognition & Error Correction</h4>';
         
-        // Enhanced markdown formatting for physician report
-        let summary = data.physician_summary
-          .replace(/## (.+)/g, '<h5 style="color: var(--accent-cool); font-size: 1.15em; font-weight: 600; margin: 24px 0 12px; border-bottom: 2px solid var(--border); padding-bottom: 8px;">$1</h5>')
-          .replace(/### (.+)/g, '<h6 style="color: var(--ink); font-size: 1.05em; font-weight: 600; margin: 16px 0 8px;">$1</h6>')
-          .replace(/\*\*(.+?)\*\*/g, '<strong style="color: var(--ink); font-weight: 600;">$1</strong>')
-          .replace(/---/g, '<hr style="border: none; border-top: 1px solid var(--border); margin: 16px 0;">')
-          .replace(/^> (.+)$/gm, '<div style="border-left: 3px solid var(--accent-cool); padding: 10px 14px; margin: 10px 0; background: rgba(47, 127, 125, 0.05); color: var(--ink-soft); font-style: italic; border-radius: 4px;">$1</div>')
-          .replace(/\n\n/g, '<br><br>')
-          .replace(/^- (.+)$/gm, '<li style="margin-left: 20px; margin-bottom: 6px; line-height: 1.7;">$1</li>')
-          .replace(/(<li[^>]*>.*?<\/li>\s*)+/g, '<ul style="margin: 12px 0; list-style-type: disc;">$&</ul>');
+        leftPanelHtml += '<div style="background: white; border-radius: 12px; padding: 14px; margin-bottom: 12px;">';
+        leftPanelHtml += '<div style="font-size: 0.85em; color: var(--ink-muted); margin-bottom: 6px;">📝 Original Transcription</div>';
+        leftPanelHtml += `<div style="font-size: 0.95em; color: var(--ink);">${transcription.original}</div>`;
+        leftPanelHtml += '</div>';
         
-        reportHtml += summary;
-        reportHtml += '</div>';
-        reportHtml += '<div style="margin-top: 12px; padding: 12px; background: rgba(240, 180, 41, 0.08); border-radius: 8px; border-left: 3px solid var(--accent-sun);">';
-        reportHtml += '<div style="font-size: 0.85em; color: #8c6110; font-weight: 600; margin-bottom: 6px;">🤖 AI-Generated Summary</div>';
-        reportHtml += '<div style="font-size: 0.8em; color: #856404; line-height: 1.5;">This summary is generated by AI based on the patient description and structured analysis. Please review and verify all information during consultation.</div>';
-        reportHtml += '</div>';
-        reportHtml += '</div>';
-        reportHtml += '</div>';
-      } else {
-        reportHtml = '<div class="result-section result-info"><p>No physician summary generated yet. Click "Analyze Pain" to generate a report.</p></div>';
-      }
-
-      // ============ LEFT PANEL: STRUCTURED DATA & ANALYSIS ============
-      let dataHtml = '';
-
-      // ============ TRANSCRIPTION NORMALIZATION (if audio) ============
-      if (transcription && transcription.original !== transcription.normalized) {
-        dataHtml += '<div class="result-section" style="background: linear-gradient(135deg, rgba(237, 106, 90, 0.08), rgba(237, 106, 90, 0.03)); border-left: 4px solid var(--accent);">';
-        dataHtml += '<h4 style="color: var(--accent);">🎤 Speech Recognition & Enhancement</h4>';
+        leftPanelHtml += '<div style="text-align: center; color: var(--accent-cool); font-size: 1.2em; margin: 8px 0;">↓</div>';
         
-        dataHtml += '<div style="background: white; padding: 14px; border-radius: 10px; margin-bottom: 12px;">';
-        dataHtml += '<div style="font-size: 0.85em; color: var(--ink-muted); margin-bottom: 6px; font-weight: 600;">Original Transcription</div>';
-        dataHtml += `<div style="font-style: italic; color: var(--ink-soft);">${transcription.original}</div>`;
-        dataHtml += '</div>';
-        
-        dataHtml += '<div style="text-align: center; margin: 8px 0; color: var(--accent);">↓</div>';
-        
-        dataHtml += '<div style="background: white; padding: 14px; border-radius: 10px;">';
-        dataHtml += '<div style="font-size: 0.85em; color: var(--accent); margin-bottom: 6px; font-weight: 600;">Enhanced Transcription</div>';
-        dataHtml += `<div style="color: var(--ink);">${transcription.normalized}</div>`;
-        dataHtml += '</div>';
+        leftPanelHtml += '<div style="background: white; border-radius: 12px; padding: 14px; border: 2px solid var(--accent-cool);">';
+        leftPanelHtml += '<div style="font-size: 0.85em; color: var(--accent-cool); margin-bottom: 6px;">✅ Error-Corrected</div>';
+        leftPanelHtml += `<div style="font-size: 0.95em; font-weight: 500; color: var(--accent-cool);">${transcription.normalized}</div>`;
+        leftPanelHtml += '</div>';
         
         if (transcription.corrections_applied && transcription.corrections_applied.length > 0) {
-          dataHtml += '<details style="margin-top: 12px;">';
-          dataHtml += '<summary style="cursor: pointer; font-size: 0.85em; color: var(--ink-muted); user-select: none;">📝 Corrections Applied ▼</summary>';
-          dataHtml += '<div style="margin-top: 10px; padding: 10px; background: white; border-radius: 8px; font-size: 0.85em;">';
-          transcription.corrections_applied.forEach(correction => {
-            dataHtml += `<div style="padding: 4px 0;">• ${correction}</div>`;
+          leftPanelHtml += '<details style="margin-top: 12px;"><summary style="font-size: 0.85em; color: var(--ink-muted); cursor: pointer;">View Corrections (' + transcription.corrections_applied.length + ')</summary>';
+          leftPanelHtml += '<div style="background: rgba(0,0,0,0.02); padding: 10px; border-radius: 6px; margin-top: 8px; font-size: 0.85em;">';
+          transcription.corrections_applied.forEach(corr => {
+            leftPanelHtml += `<div style="padding: 4px 0;">• ${corr}</div>`;
           });
-          dataHtml += '</div></details>';
+          leftPanelHtml += '</div></details>';
         }
-        dataHtml += '</div>';
+        leftPanelHtml += '</div>';
       }
-
-      // ============ PAIN ASSESSMENT SUMMARY ============
-      dataHtml += '<div class="result-section">';
-      dataHtml += '<h4>🩺 Structured Pain Assessment</h4>';
-      dataHtml += '<div style="display: grid; grid-template-columns: 1fr; gap: 10px;">';
+      
+      // 2. Dictionary Term Mappings (Neuro-Symbolic System)
+      if (mappings && mappings.length > 0) {
+        leftPanelHtml += '<div class="result-section" style="margin-bottom: 16px;">';
+        leftPanelHtml += '<h4 style="color: #2563eb;">📚 Dictionary Term Mapping</h4>';
+        leftPanelHtml += '<p style="font-size: 0.85em; color: var(--ink-muted); margin-bottom: 12px;">Matched pain terms from multilingual medical vocabulary:</p>';
+        
+        mappings.slice(0, 10).forEach((m, index) => {
+          const badgeClass = m.pain_type === 'neuropathic' ? 'badge-neuropathic' : 
+                            m.pain_type === 'nociceptive' ? 'badge-nociceptive' : 'badge-affective';
+          leftPanelHtml += `
+            <div style="background: white; padding: 12px; border-radius: 8px; margin-bottom: 8px; border-left: 3px solid #2563eb;">
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                  <strong style="color: #1e40af;">"${m.original_term || m.chinese_input}"</strong> → 
+                  <strong style="color: #059669;">${m.mapped_english}</strong>
+                </div>
+                <span class="badge ${badgeClass}" style="font-size: 0.75em;">${m.pain_type || 'sensory'}</span>
+              </div>
+            </div>
+          `;
+        });
+        leftPanelHtml += '</div>';
+      }
+      
+      // 3. BioLORD Comprehensive Analysis (Medical AI Semantic Matching)
+      if (biolordAnalysis) {
+        const dictVerified = biolordAnalysis.dictionary_verified || [];
+        const unmappedSuggestions = biolordAnalysis.unmapped_suggestions || [];
+        const totalTerms = dictVerified.length + unmappedSuggestions.length;
+        
+        leftPanelHtml += '<div class="result-section" style="margin-bottom: 16px; background: linear-gradient(135deg, rgba(139, 92, 246, 0.08), rgba(139, 92, 246, 0.03)); border: 2px solid #8b5cf6;">';
+        leftPanelHtml += '<h4 style="color: #7c3aed;">🔬 BioLORD Medical AI Analysis</h4>';
+        leftPanelHtml += `<p style="font-size: 0.85em; color: var(--ink-muted); margin-bottom: 12px;">Semantic similarity analysis using BioLORD-2023-M medical embeddings (${totalTerms} terms)</p>`;
+        
+        if (dictVerified.length > 0) {
+          leftPanelHtml += '<div style="margin-bottom: 12px;"><strong style="color: #059669; font-size: 0.9em;">✅ Dictionary-Verified Terms:</strong></div>';
+          dictVerified.forEach(item => {
+            const score = item.semantic_score || 0;
+            const confidence = item.confidence || 'unknown';
+            const scoreColor = score > 0.8 ? '#059669' : score > 0.6 ? '#d97706' : '#dc2626';
+            leftPanelHtml += `
+              <div style="background: white; padding: 10px; border-radius: 6px; margin-bottom: 6px; font-size: 0.85em;">
+                <div><strong>"${item.original_term}"</strong> → ${item.matched_standard_english}</div>
+                <div style="margin-top: 4px; color: var(--ink-muted);">
+                  Score: <strong style="color: ${scoreColor};">${score.toFixed(3)}</strong> | 
+                  Confidence: <strong>${confidence}</strong>
+                </div>
+              </div>
+            `;
+          });
+        }
+        
+        if (unmappedSuggestions.length > 0) {
+          leftPanelHtml += '<div style="margin: 16px 0 12px 0;"><strong style="color: #d97706; font-size: 0.9em;">🔍 AI-Suggested Matches (Unmapped):</strong></div>';
+          unmappedSuggestions.forEach(item => {
+            const score = item.semantic_score || 0;
+            const confidence = item.confidence || 'low';
+            leftPanelHtml += `
+              <div style="background: #fffbeb; padding: 10px; border-radius: 6px; margin-bottom: 6px; font-size: 0.85em; border-left: 3px solid #d97706;">
+                <div><strong>"${item.original_term}"</strong> → <em>${item.matched_standard_english}</em> (suggestion)</div>
+                <div style="margin-top: 4px; color: #78350f;">
+                  Score: <strong>${score.toFixed(3)}</strong> | Confidence: <strong>${confidence}</strong>
+                </div>
+              </div>
+            `;
+          });
+        }
+        leftPanelHtml += '</div>';
+      }
+      
+      // 4. Rule Engine Clinical Recommendations
+      if (recommendations && recommendations.length > 0) {
+        leftPanelHtml += '<div class="result-section" style="background: linear-gradient(135deg, rgba(239, 68, 68, 0.08), rgba(239, 68, 68, 0.03)); border: 2px solid #ef4444;">';
+        leftPanelHtml += '<h4 style="color: #dc2626;">⚙️ Rule Engine - Clinical Recommendations</h4>';
+        leftPanelHtml += '<p style="font-size: 0.85em; color: var(--ink-muted); margin-bottom: 12px;">Evidence-based rules triggered by patient presentation:</p>';
+        
+        recommendations.forEach((rec, index) => {
+          leftPanelHtml += `
+            <div style="background: white; padding: 14px; border-radius: 10px; margin-bottom: ${index < recommendations.length - 1 ? '10px' : '0'}; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+              <div style="font-weight: 600; color: #dc2626; margin-bottom: 8px; font-size: 0.95em;">${rec.triggered_by_rule || 'Clinical Rule'}</div>
+              <div style="color: var(--ink); line-height: 1.5; font-size: 0.9em;">${rec.recommendation}</div>
+              <div style="margin-top: 10px; display: flex; justify-content: space-between; align-items: center; font-size: 0.8em; color: var(--ink-muted);">
+                <span>Confidence: <strong>${rec.confidence || 'medium'}</strong></span>
+                ${rec.evidence ? '<span style="font-style: italic;">Evidence-based</span>' : ''}
+              </div>
+            </div>
+          `;
+        });
+        leftPanelHtml += '</div>';
+      }
+      
+      // 5. Structured Pain Assessment Summary
+      leftPanelHtml += '<div class="result-section" style="margin-top: 16px;">';
+      leftPanelHtml += '<h4>🩺 Structured Pain Assessment Summary</h4>';
+      leftPanelHtml += '<div class="result-grid">';
 
       if (sd.pain_type && sd.pain_type !== 'Not detected') {
-        // Remove [Unmapped terms: ...] from pain_type for clean display
         let painType = sd.pain_type.replace(/\[Unmapped terms:[^\]]+\]/g, '').trim();
         const badgeClass = painType.toLowerCase().includes('neuropathic') ? 'badge-neuropathic' : 
                           painType.toLowerCase().includes('nociceptive') ? 'badge-nociceptive' : 'badge-affective';
-        dataHtml += `
+        leftPanelHtml += `
           <div class="result-item" style="grid-column: 1 / -1;">
-            <div class="result-item-label">Pain Type</div>
+            <div class="result-item-label">Pain Classification</div>
             <div class="result-item-value">
               ${painType} <span class="badge ${badgeClass}" style="margin-left: 6px;">${painType.split(' ')[0]}</span>
             </div>
@@ -712,7 +850,7 @@
       }
 
       if (sd.location && sd.location !== 'Not specified') {
-        dataHtml += `
+        leftPanelHtml += `
           <div class="result-item">
             <div class="result-item-label">📍 Location</div>
             <div class="result-item-value">${sd.location}</div>
@@ -721,7 +859,7 @@
       }
 
       if (sd.temporal_pattern && sd.temporal_pattern !== 'Not specified') {
-        dataHtml += `
+        leftPanelHtml += `
           <div class="result-item">
             <div class="result-item-label">⏱️ Pattern</div>
             <div class="result-item-value">${sd.temporal_pattern}</div>
@@ -730,7 +868,7 @@
       }
 
       if (sd.intensity && sd.intensity !== 'Not stated') {
-        dataHtml += `
+        leftPanelHtml += `
           <div class="result-item">
             <div class="result-item-label">💪 Intensity</div>
             <div class="result-item-value">${sd.intensity}</div>
@@ -739,7 +877,7 @@
       }
 
       if (sd.duration && sd.duration !== 'Not stated') {
-        dataHtml += `
+        leftPanelHtml += `
           <div class="result-item">
             <div class="result-item-label">⏳ Duration</div>
             <div class="result-item-value">${sd.duration}</div>
@@ -748,7 +886,7 @@
       }
 
       if (sd.emotion && sd.emotion !== 'None detected') {
-        dataHtml += `
+        leftPanelHtml += `
           <div class="result-item" style="grid-column: 1 / -1;">
             <div class="result-item-label">😔 Emotional Impact</div>
             <div class="result-item-value">${sd.emotion}</div>
@@ -757,7 +895,7 @@
       }
 
       if (sd.functional_impact && sd.functional_impact !== 'Not stated') {
-        dataHtml += `
+        leftPanelHtml += `
           <div class="result-item" style="grid-column: 1 / -1;">
             <div class="result-item-label">🚶 Functional Impact</div>
             <div class="result-item-value">${sd.functional_impact}</div>
@@ -765,173 +903,55 @@
         `;
       }
 
-      dataHtml += '</div></div>';
+      leftPanelHtml += '</div></div>';
 
-      // ============ UNMAPPED/UNIQUE PAIN DESCRIPTORS WARNING ============
-      if (sd.pain_type && sd.pain_type.includes('[Unmapped terms:')) {
-        const unmappedMatch = sd.pain_type.match(/\[Unmapped terms: ([^\]]+)\]/);
-        if (unmappedMatch) {
-          const unmappedTerms = unmappedMatch[1].split(', ');
-          dataHtml += '<div class="result-section result-warning">';
-          dataHtml += '<h4 style="color: #8c6110;">⚠️ Unique Pain Descriptors (Not in Medical Dictionary)</h4>';
-          dataHtml += '<p style="color: #856404; line-height: 1.6; margin-bottom: 12px;">The patient used creative/metaphorical expressions that are not in our standardized pain terminology database. These should be noted for clinical context:</p>';
-          
-          unmappedTerms.forEach(term => {
-            dataHtml += `
-              <div style="background: white; padding: 12px 14px; border-radius: 10px; margin-bottom: 10px; border-left: 4px solid var(--accent-sun); box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
-                <span style="font-weight: 600; color: var(--ink);">📝 "${term.trim()}"</span>
-              </div>
-            `;
-          });
-          
-          dataHtml += '<div style="font-size: 0.85em; color: #856404; margin-top: 10px; font-style: italic; background: rgba(240, 180, 41, 0.08); padding: 10px; border-radius: 8px;">💡 Recommendation: Consider asking follow-up questions to understand these expressions in clinical terms.</div>';
-          dataHtml += '</div>';
-        }
-      }
+      // Display left panel (comprehensive pipeline view)
+      speechResultsCard.style.display = 'block';
+      speechResultsContent.innerHTML = leftPanelHtml;
 
-      // ============ BIOLORD TERMINOLOGY MAPPINGS (DETAILED WITH SCORES) ============
-      if (mappings && mappings.length > 0) {
-        const confirmedMappings = mappings.filter(m => !m.is_suggestion);
-        const suggestedMappings = mappings.filter(m => m.is_suggestion);
-        
-        dataHtml += '<div class="result-section result-info">';
-        dataHtml += '<h4 style="color: var(--accent-cool);">🔬 BioLORD Medical Terminology Mapping</h4>';
-        dataHtml += '<p style="font-size: 0.9em; color: var(--ink-muted); margin-bottom: 12px;">Using BioLORD-2023-M medical embeddings to map patient expressions to standardized clinical terms.</p>';
-        
-        if (confirmedMappings.length > 0) {
-          dataHtml += '<div style="margin-bottom: 16px;">';
-          dataHtml += '<div style="font-weight: 600; color: var(--accent-cool); margin-bottom: 10px; font-size: 0.95em;">✅ Confirmed Dictionary Matches</div>';
-          
-          confirmedMappings.forEach((m, index) => {
-            const badgeClass = m.pain_type === 'neuropathic' ? 'badge-neuropathic' : 
-                              m.pain_type === 'nociceptive' ? 'badge-nociceptive' : 'badge-affective';
-            
-            // Calculate confidence percentage
-            let confidencePercent = 0;
-            let confidenceColor = '#999';
-            if (m.semantic_confidence === 'high' || m.confidence === 'high') {
-              confidencePercent = 95;
-              confidenceColor = '#28a745';
-            } else if (m.semantic_confidence === 'medium' || m.confidence === 'medium') {
-              confidencePercent = 75;
-              confidenceColor = '#ffc107';
-            } else if (m.confidence === 'low') {
-              confidencePercent = 50;
-              confidenceColor = '#dc3545';
-            }
-            
-            // If there's a semantic score (from BioLORD), use that instead
-            if (m.semantic_score || (m.closest_matches && m.closest_matches[0] && m.closest_matches[0].score)) {
-              const score = m.semantic_score || (m.closest_matches && m.closest_matches[0] && m.closest_matches[0].score) || 0;
-              if (score > 0) {
-                confidencePercent = Math.round(score * 100);
-                confidenceColor = score > 0.75 ? '#28a745' : score > 0.60 ? '#ffc107' : '#dc3545';
-              }
-            }
-            
-            dataHtml += `
-              <div style="background: white; padding: 14px; border-radius: 10px; margin-bottom: 10px; border-left: 4px solid var(--accent-cool); box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
-                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px;">
-                  <div style="flex: 1;">
-                    <div style="font-size: 0.85em; color: var(--ink-muted); margin-bottom: 4px;">Patient Expression</div>
-                    <div style="font-weight: 600; color: var(--ink); font-size: 1.05em;">"${m.original_term || m.chinese_input}"</div>
-                  </div>
-                  <div style="text-align: right;">
-                    <span class="badge ${badgeClass}" style="font-size: 0.7rem; display: block; margin-bottom: 4px;">${m.pain_type || m.dimension}</span>
-                    ${confidencePercent > 0 ? `<div style="font-size: 0.75em; color: ${confidenceColor}; font-weight: 600;">Match: ${confidencePercent}%</div>` : ''}
-                  </div>
-                </div>
-                <div style="text-align: center; margin: 6px 0; color: var(--accent-cool);">↓</div>
-                <div style="background: rgba(47, 127, 125, 0.08); padding: 10px; border-radius: 8px;">
-                  <div style="font-size: 0.85em; color: var(--accent-cool); margin-bottom: 4px;">Clinical Terminology</div>
-                  <div style="font-weight: 600; color: var(--accent-cool); font-size: 1.05em;">${m.mapped_english}</div>
-                </div>
-                ${m.matched_text && m.matched_text !== m.original_term ? 
-                  `<div style="margin-top: 8px; font-size: 0.8em; color: var(--ink-muted); font-style: italic;">Matched via: "${m.matched_text}"</div>` : ''}
-                ${m.match_type ? `<div style="margin-top: 6px; font-size: 0.75em; color: var(--ink-muted);">🔍 Match type: ${m.match_type === 'both' ? 'Dictionary + Semantic' : m.match_type}</div>` : ''}
-              </div>
-            `;
-          });
-          dataHtml += '</div>';
-        }
-        
-        if (suggestedMappings.length > 0) {
-          dataHtml += '<div style="background: rgba(240, 180, 41, 0.08); padding: 14px; border-radius: 12px; border: 2px dashed var(--accent-sun);">';
-          dataHtml += '<div style="font-weight: 600; color: #8c6110; margin-bottom: 10px; font-size: 0.95em;">⚠️ Similarity-Based Suggestions (Not in Dictionary)</div>';
-          dataHtml += '<p style="font-size: 0.85em; color: #856404; margin-bottom: 12px;">These terms were not found in the medical dictionary. The system suggests similar terms based on semantic similarity.</p>';
-          
-          suggestedMappings.forEach(m => {
-            dataHtml += `
-              <div style="background: white; padding: 12px; border-radius: 8px; margin-bottom: 8px; border-left: 3px dashed var(--accent-sun);">
-                <div style="font-weight: 600; color: #856404;">"${m.original_term}" → possibly similar to → "${m.mapped_english}"</div>
-                ${m.similarity_reason ? `<div style="margin-top: 6px; font-size: 0.85em; color: #856404;">Reason: ${m.similarity_reason}</div>` : ''}
-              </div>
-            `;
-          });
-          dataHtml += '</div>';
-        }
-        
-        dataHtml += '</div>';
-      }
-
-      // ============ CLINICAL RECOMMENDATIONS ============
-      if (recommendations && recommendations.length > 0) {
-        dataHtml += '<div class="result-section" style="background: linear-gradient(135deg, rgba(237, 106, 90, 0.08), rgba(237, 106, 90, 0.03)); border-left: 4px solid var(--accent);">';
-        dataHtml += '<h4 style="color: var(--accent);">💡 Rule Engine Clinical Recommendations</h4>';
-        dataHtml += '<p style="font-size: 0.9em; color: var(--ink-muted); margin-bottom: 12px;">Evidence-based recommendations triggered by clinical rule engine.</p>';
-        
-        recommendations.forEach((rec, index) => {
-          dataHtml += `
-            <div style="background: white; padding: 16px; border-radius: 12px; margin-bottom: ${index < recommendations.length - 1 ? '12px' : '0'}; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
-              <div style="font-weight: 600; color: var(--accent); margin-bottom: 8px; font-size: 1.05em;">${rec.triggered_by_rule || 'Clinical Recommendation'}</div>
-              <div style="color: var(--ink); line-height: 1.6;">${rec.recommendation}</div>
-              <div style="margin-top: 10px; display: flex; justify-content: space-between; align-items: center; font-size: 0.85em;">
-                <span style="color: var(--ink-muted);">Confidence: <strong>${rec.confidence || 'medium'}</strong></span>
-                ${rec.evidence ? `<span style="color: var(--accent-cool);">Evidence: ${rec.evidence}</span>` : ''}
-              </div>
-            </div>
-          `;
-        });
-        dataHtml += '</div>';
-      }
-
-      // ============ REASONING CHAIN (COLLAPSIBLE) ============
-      if (reasoning && reasoning.length > 0) {
-        dataHtml += '<details style="margin-top: 16px; border-radius: 12px; background: var(--surface-muted); overflow: hidden;">';
-        dataHtml += '<summary style="padding: 14px 18px; font-weight: 600; color: var(--ink-soft); cursor: pointer; user-select: none; background: var(--surface-muted); border-radius: 12px; transition: background 0.2s;">';
-        dataHtml += `🧠 AI Reasoning Process (${reasoning.length} steps) - Click to expand`;
-        dataHtml += '</summary>';
-        dataHtml += '<div style="padding: 18px; background: white;">';
-        
-        reasoning.forEach((step, index) => {
-          let formattedStep = step.replace(/===/g, '').trim();
-          const isHeader = step.includes('===') || /^[A-Z\s]+$/.test(formattedStep);
-          
-          if (isHeader) {
-            dataHtml += `<div style="background: linear-gradient(135deg, rgba(47, 127, 125, 0.12), rgba(47, 127, 125, 0.05)); padding: 10px 14px; border-radius: 8px; font-weight: 600; color: var(--accent-cool); margin: ${index > 0 ? '16px' : '0'} 0 10px;">
-              ${formattedStep}
-            </div>`;
-          } else {
-            dataHtml += `<div style="background: #fffaf4; padding: 12px; border-radius: 8px; margin: 6px 0; border-left: 3px solid var(--border); font-family: 'Courier New', monospace; font-size: 0.85em; color: var(--ink-soft); white-space: pre-wrap; line-height: 1.5;">
-              ${formattedStep}
-            </div>`;
-          }
-        });
-        
-        dataHtml += '</div></details>';
-      }
-
-      // ============ COMBINE INTO TWO-COLUMN LAYOUT ============
-      const finalHtml = `
-        <div class="results-layout">
-          <div>${dataHtml}</div>
-          <div>${reportHtml}</div>
-        </div>
-      `;
+      // ============ RIGHT PANEL: GPT COMPREHENSIVE CLINICAL REPORT ============
+      let rightPanelHtml = '';
       
-      resultsContent.innerHTML = finalHtml;
+      if (physicianSummary) {
+        // Enhanced markdown to HTML conversion with better formatting
+        let formattedReport = physicianSummary
+          // Headers
+          .replace(/^## (.+)$/gm, '<h3 style="margin-top: 28px; margin-bottom: 14px; font-family: Fraunces, serif; color: #1e293b; border-bottom: 2px solid #e2e8f0; padding-bottom: 8px;">$1</h3>')
+          // Bold
+          .replace(/\*\*(.+?)\*\*/g, '<strong style="color: #0f172a;">$1</strong>')
+          // Italic
+          .replace(/\*(.+?)\*/g, '<em>$1</em>')
+          // Tables (basic support)
+          .replace(/\|(.+)\|/g, function(match) {
+            const cells = match.split('|').filter(c => c.trim());
+            const cellsHtml = cells.map(c => `<td style="padding: 8px; border: 1px solid #e2e8f0;">${c.trim()}</td>`).join('');
+            return `<tr>${cellsHtml}</tr>`;
+          })
+          // Wrap table rows
+          .replace(/(<tr>.+<\/tr>\s*)+/g, '<table style="width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 0.9em;">$&</table>')
+          // Bullet points
+          .replace(/^- (.+)$/gm, '<li style="margin-left: 20px; margin-bottom: 8px; line-height: 1.6;">$1</li>')
+          // Wrap lists
+          .replace(/(<li[^>]*>.*?<\/li>\s*)+/g, '<ul style="margin: 12px 0; padding-left: 0;">$&</ul>')
+          // Line breaks to paragraphs
+          .replace(/\n\n/g, '</p><p style="margin-bottom: 16px; line-height: 1.7; color: #334155;">')
+          // Final cleanup
+          .replace(/^(.+)$/gm, '$1');
+        
+        rightPanelHtml += '<div style="font-size: 0.95em; color: var(--ink); line-height: 1.7;">';
+        rightPanelHtml += '<p style="margin-bottom: 16px; line-height: 1.7; color: #334155;">';
+        rightPanelHtml += formattedReport;
+        rightPanelHtml += '</p></div>';
+      } else {
+        rightPanelHtml += '<div class="result-section result-warning">';
+        rightPanelHtml += '<h4>⚠️ Report Generation Issue</h4>';
+        rightPanelHtml += '<p>Comprehensive clinical report was not generated. Backend processing may have failed.</p>';
+        rightPanelHtml += '</div>';
+      }
+
+      // Display right panel (GPT comprehensive report)
+      resultsContent.innerHTML = rightPanelHtml;
     }
-  
 
     // Audio Recording Functions
     let mediaRecorder;

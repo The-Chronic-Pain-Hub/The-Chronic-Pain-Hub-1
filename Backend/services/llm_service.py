@@ -391,52 +391,46 @@ def normalize_transcription(text: str, language: str = "Chinese") -> dict:
         >>> }
     """
     
-    system_prompt = f"""You are a medical transcription normalization expert for {language} pain descriptions.
+    system_prompt = f"""You are a medical transcription error correction expert for {language} pain descriptions.
 
-**YOUR TASK**: Clean and standardize speech-to-text transcription while preserving the patient's original pain descriptors.
+**YOUR TASK**: ONLY correct obvious transcription errors (wrong characters, typos). DO NOT standardize terminology or rewrite sentences.
 
-**NORMALIZATION RULES**:
+**STRICT RULES - ONLY FIX THESE**:
 
-1. **Fix Transcription Errors**:
-   - Correct common Whisper errors (homophones, misheard words)
-   - Examples:
-     * Chinese: "一揪一揪" → "一抽一抽" (throbbing)
-     * Korean: "따금거리다" → "따끔거리다" (stinging)
-     * Spanish: "quemasón" → "quemazón" (burning)
+1. **Fix Actual Transcription Errors ONLY**:
+   - Correct ONLY clear mistakes (wrong homophones, typos)
+   - Examples of what to fix:
+     * Chinese: "一揪一揪" → "一抽一抽" (wrong character for throbbing sound)
+     * Korean: "따금거리다" → "따끔거리다" (typo in stinging word)
+     * Spanish: "quemasón" → "quemazón" (spelling error)
    
    **SPECIAL: Traditional Chinese → Simplified Chinese Conversion**:
-   - Whisper may output Traditional Chinese based on speaker accent (Taiwan/Hong Kong)
-   - Our pain dictionary uses ONLY Simplified Chinese - conversion is REQUIRED
-   - Convert Traditional characters to Simplified:
-     * 還 → 还, 點 → 点, 個 → 个, 頭 → 头, 麻 → 麻 (already same)
+   - Whisper may output Traditional Chinese - our dictionary uses Simplified
+   - Convert Traditional to Simplified:
+     * 還 → 还, 點 → 点, 個 → 个, 頭 → 头
      * 癢 → 痒, 脹 → 胀, 緊 → 紧, 軟 → 软, 腫 → 肿
      * 鬱悶 → 郁闷, 難受 → 难受, 嚴重 → 严重
+     * 肚子 stays as 肚子 (already Simplified)
    - Examples:
      * "我的腿火辣辣的疼，還有點麻" → "我的腿火辣辣的疼，还有点麻"
      * "頭很痛" → "头很痛"
-     * "感覺很難受" → "感觉很难受"
 
-2. **Standardize Pain Descriptors**:
-   - Keep vivid pain terms intact (these are medically valuable)
-   - Convert colloquial to standard forms:
-     * Chinese: "疼得不行" → "剧烈疼痛"
-     * Korean: "너무 아파" → "심한 통증"
-     * Spanish: "me duele muchísimo" → "dolor intenso"
+2. **Remove ONLY Obvious Filler Words**:
+   - Remove: "那个", "嗯", "uh", "like", "怎么说"
+   - Keep everything else intact
 
-3. **Clean Up Grammar**:
-   - Remove filler words ("那个", "嗯", "uh", "like")
-   - Complete incomplete sentences
-   - Fix word order errors
-   - But DO NOT change pain descriptors
-    
-4. **Preserve Original Meaning**:
-   - DO NOT add medical interpretations
-   - DO NOT change the severity described
-   - DO NOT invent information not in original text
+**CRITICAL - DO NOT DO THESE**:
+❌ DO NOT standardize terminology ("肚子" → "腹部" is WRONG)
+❌ DO NOT rewrite colloquial expressions (keep "疼得不行", "有点疼")
+❌ DO NOT change body part names (keep "肚子", "腿", not "腹部", "腿部")
+❌ DO NOT modify pain descriptors at all
+❌ DO NOT complete or rewrite sentences
+❌ DO NOT fix grammar unless it's a clear transcription error
 
-5. **Standardize Body Part Names**:
-   - Chinese: "腿" → "腿部", "肚子" → "腹部"
-   - Keep other details as-is
+**PRESERVE PATIENT'S ORIGINAL WORDS**:
+   - Keep colloquial language ("肚子" not "腹部")
+   - Keep oral expressions ("有点", "一直", "就是")
+   - Keep patient's natural phrasing
 
 **OUTPUT FORMAT** (JSON only):
 {{
@@ -451,43 +445,48 @@ def normalize_transcription(text: str, language: str = "Chinese") -> dict:
 
 **EXAMPLES**:
 
+Example 1: Only remove filler words, keep everything else
 Input: "腿那个...怎么说...火辣辣的，疼死了"
 Output: {{
   "original": "腿那个...怎么说...火辣辣的，疼死了",
-  "normalized": "腿部火辣辣的疼",
-  "corrections": ["removed filler words '那个', '怎么说'", "standardized '腿' to '腿部'", "converted '疼死了' to '疼'"],
+  "normalized": "腿火辣辣的，疼死了",
+  "corrections": ["removed filler words '那个...怎么说...'"],
   "confidence": "high"
 }}
 
-Input: "我的腿火辣辣的疼，還有點麻"
+Example 2: Only convert Traditional to Simplified, keep colloquial terms
+Input: "我這兩天一直覺得肚子右邊有點疼"
 Output: {{
-  "original": "我的腿火辣辣的疼，還有點麻",
-  "normalized": "我的腿火辣辣的疼，还有点麻",
-  "corrections": ["converted Traditional Chinese to Simplified: 還→还, 點→点"],
+  "original": "我這兩天一直覺得肚子右邊有點疼",
+  "normalized": "我这两天一直觉得肚子右边有点疼",
+  "corrections": ["converted Traditional to Simplified: 這→这, 覺→觉, 點→点"],
   "confidence": "high"
 }}
 
-Input: "頭很痛，感覺很難受"
+Example 3: No changes needed if already Simplified and clear
+Input: "肚子有点疼，走路更明显"
 Output: {{
-  "original": "頭很痛，感覺很難受",
-  "normalized": "头很痛，感觉很难受",
-  "corrections": ["converted Traditional Chinese: 頭→头, 難→难"],
+  "original": "肚子有点疼，走路更明显",
+  "normalized": "肚子有点疼，走路更明显",
+  "corrections": [],
   "confidence": "high"
 }}
 
-Input: "허리가 따금거려요, 너무 아파요"
+Example 4: Korean - only fix typos
+Input: "허리가 따금거려요"
 Output: {{
-  "original": "허리가 따금거려요, 너무 아파요",
-  "normalized": "허리가 따끔거리고 심하게 아프다",
-  "corrections": ["corrected '따금거려요' to '따끔거리고'", "standardized '너무 아파요' to '심하게 아프다'"],
+  "original": "허리가 따금거려요",
+  "normalized": "허리가 따끔거려요",
+  "corrections": ["fixed typo: 따금→따끔 (stinging)"],
   "confidence": "high"
 }}
 
-Input: "Me duele la espalda, como quemasón"
+Example 5: Spanish - only fix spelling
+Input: "Me duele como quemasón"
 Output: {{
-  "original": "Me duele la espalda, como quemasón",
-  "normalized": "Dolor de espalda con quemazón",
-  "corrections": ["standardized sentence structure", "corrected 'quemasón' to 'quemazón'"],
+  "original": "Me duele como quemasón",
+  "normalized": "Me duele como quemazón",
+  "corrections": ["fixed spelling: quemasón→quemazón"],
   "confidence": "high"
 }}
 """
@@ -640,7 +639,8 @@ def generate_comprehensive_report(
     ontology_mappings: list,
     clinical_recommendations: list,
     detected_language: str = "Chinese",  # New parameter: detected language
-    semantic_analysis: dict = None  # New parameter: semantic distance analysis
+    semantic_analysis: dict = None,  # Legacy: unmapped terms only
+    biolord_comprehensive_analysis: dict = None  # NEW: All terms BioLORD analysis
 ) -> str:
     """
     Generate comprehensive multilingual clinical report using GPT after rule-based analysis.
@@ -654,7 +654,8 @@ def generate_comprehensive_report(
         ontology_mappings: List of term mappings (original_term → mapped_english)
         clinical_recommendations: List of rule-triggered recommendations
         detected_language: Language detected from input (default: "Chinese")
-        semantic_analysis: Optional semantic distance analysis for unmapped terms
+        semantic_analysis: Optional semantic distance analysis for unmapped terms (legacy)
+        biolord_comprehensive_analysis: NEW - Complete BioLORD analysis of ALL terms (dict/unmapped)
         
     Returns:
         Comprehensive bilingual clinical report (original language + English)
@@ -677,42 +678,63 @@ def generate_comprehensive_report(
     system_prompt = f"""You are a medical report writer for multilingual pain assessment.
 
 **INPUT LANGUAGE**: {detected_language}
-**OUTPUT FORMAT**: {"English only (no translation needed)" if is_english_only else f"Bilingual ({native_lang} + English)"}
+**OUTPUT FORMAT**: English medical report (use English medical terminology throughout)
 
-**YOUR TASK**: Create a well-structured clinical report with THREE sections:
+**YOUR TASK**: Create a well-structured clinical report with the following sections IN THIS EXACT ORDER:
 
-**SECTION 1: Translation & Terminology Mapping {"| 翻译与术语映射" if not is_english_only else ""}**
-- Explain how patient's expressions were mapped to standardized medical terminology
-- {"List Original " + detected_language + " terms → English translations" if not is_english_only else "Show pain descriptors used"}
-- Highlight culturally-specific metaphors if present
-- Be clear and structured
+## 1. Translation | 翻译
+- Provide FULL English translation of patient's original description
+- Keep natural, conversational tone
+- Preserve all details from original text
 
-**SECTION 2: Clinical Assessment {"| 临床评估" if not is_english_only else ""}**
-- Summarize pain characteristics: type, location, duration, intensity
-- Explain pain classification (neuropathic/nociceptive) in simple terms
-- Describe emotional and functional impacts
-- Be empathetic and clear
+## 2. Cultural & Metaphorical Expressions | 文化隐喻
+- Identify any metaphors or culturally-specific expressions
+- Explain their medical interpretation
+- Example: "像被大象踩" (feels like being stepped on by elephant) = severe pressure pain
+- Example: "像蚂蚁爬" (like ants crawling) = tingling/formication sensation
+- Mark clearly: **(AI-interpreted from cultural context)**
+- If no metaphors found, write: "No culturally-specific metaphors detected."
 
-**SECTION 3: Treatment Recommendations {"| 治疗建议" if not is_english_only else ""}**
-- Explain each recommended intervention and WHY
-- Reference clinical rules or guidelines that triggered recommendations
-- Provide actionable guidance
-- Be supportive
+## 3. BioLORD Medical Terminology Mapping | BioLORD医学术语映射
+- Display ALL pain terms analyzed by BioLORD AI model
+- Format as clear table:
 
-**FORMATTING REQUIREMENTS**:
-- {"Bilingual headings (" + native_lang + " | English)" if not is_english_only else "English headings"}
-- Professional but accessible language
-- Concise paragraphs
-- Bullet points for clarity
-- Total: 300-500 words
+**Dictionary-Verified Terms** (matched in medical vocabulary + BioLORD semantic verification):
+| Original ({detected_language}) | Mapped English | Semantic Score | Confidence | Pain Type |
+|-------------------------------|----------------|----------------|------------|-----------||
+| [Chinese term] | [English term] | 0.XXX | high/med/low | sensory/affective/neuropathic |
 
-**TONE**: Professional, empathetic, culturally sensitive
+**Unmapped Terms** (BioLORD AI-suggested matches):
+| Original | BioLORD Suggestion | Semantic Score | Confidence |
+|----------|-------------------|----------------|------------|
+| [term] | [suggestion] | 0.XXX | low/med |
 
-**IMPORTANT**:
-- Base ENTIRELY on provided data - do NOT invent
-- If no recommendations, provide supportive general guidance
-- Maintain medical accuracy while patient-friendly
-- {"Use both " + detected_language + " and English for key medical terms" if not is_english_only else "Use clear medical English"}"""
+## 4. Clinical Assessment | 临床评估
+- **Pain Classification**: Neuropathic vs Nociceptive vs Mixed
+- **Key Characteristics**: Location, duration, intensity, pattern
+- **Psychosocial Impact**: Emotional distress, functional limitations
+- Use clear, empathetic language
+
+## 5. Clinical Recommendations | 临床建议
+- List each recommendation with clinical rationale
+- Reference triggering rules (e.g., "RULE_A: Chronic Pain + Depression")
+- Provide actionable next steps
+- Be supportive and patient-centered
+
+---
+
+**FORMATTING RULES**:
+- Use English section headings with Chinese subtitle
+- Use markdown formatting (##, **, tables)
+- Include emojis for visual clarity (🌐, 🎭, 🔬, 🩺, 💡)
+- Keep professional but accessible tone
+- Length: 400-600 words
+
+**CRITICAL REQUIREMENTS**:
+- Follow section order EXACTLY (Translation → Metaphors → BioLORD → Assessment → Recommendations)
+- Use English for all medical content (Chinese only for original term references)
+- Base ENTIRELY on provided data - no speculation
+- If section has no data, write clear "None detected" message"""
 
     # Prepare mappings summary (handle different field names)
     mappings_summary = "\n".join([
@@ -725,9 +747,46 @@ def generate_comprehensive_report(
         for rec in clinical_recommendations
     ]) if clinical_recommendations else "No specific recommendations triggered"
     
-    # Prepare semantic analysis summary
-    semantic_summary = ""
-    if semantic_analysis and semantic_analysis.get('unmapped_analysis'):
+    # Prepare BioLORD comprehensive analysis summary (ALL terms)
+    biolord_summary = ""
+    if biolord_comprehensive_analysis:
+        all_analysis = biolord_comprehensive_analysis.get('all_analysis', [])
+        dict_verified = biolord_comprehensive_analysis.get('dictionary_verified', [])
+        unmapped_suggestions = biolord_comprehensive_analysis.get('unmapped_suggestions', [])
+        
+        biolord_summary = f"\n\n**BioLORD COMPREHENSIVE ANALYSIS** (All Pain Terms - Medical AI Semantic Analysis):\n"
+        biolord_summary += f"Total terms analyzed: {len(all_analysis)}\n"
+        biolord_summary += f"  - Dictionary-matched & BioLORD verified: {len(dict_verified)}\n"
+        biolord_summary += f"  - Unmapped & BioLORD analyzed: {len(unmapped_suggestions)}\n\n"
+        
+        if dict_verified:
+            biolord_summary += "**DICTIONARY-MATCHED TERMS (BioLORD Semantic Verification):**\n"
+            for item in dict_verified:
+                original = item['original_term']
+                biolord_match = item['matched_standard_english']
+                semantic_score = item.get('semantic_score', 0)
+                confidence = item['confidence']
+                pain_type = item['closest_matches'][0].get('pain_type', 'unknown') if item['closest_matches'] else 'unknown'
+                biolord_summary += f"  • '{original}' → BioLORD: '{biolord_match}' (semantic score: {semantic_score:.3f}, confidence: {confidence}, type: {pain_type})\n"
+            biolord_summary += "\n"
+        
+        if unmapped_suggestions:
+            biolord_summary += "**UNMAPPED TERMS (BioLORD AI-Assisted Semantic Suggestions):**\n"
+            for item in unmapped_suggestions:
+                original = item['original_term']
+                biolord_suggestion = item['matched_standard_english']
+                semantic_score = item.get('semantic_score', 0)
+                confidence = item['confidence']
+                pain_type = item['closest_matches'][0].get('pain_type', 'unknown') if item['closest_matches'] else 'unknown'
+                biolord_summary += f"  • '{original}' → BioLORD suggests: '{biolord_suggestion}' (semantic score: {semantic_score:.3f}, confidence: {confidence}, type: {pain_type})\n"
+            biolord_summary += "\n"
+        
+        biolord_summary += "Model: BioLORD-2023-M (Medical Language Model trained on medical ontologies)\n"
+        biolord_summary += "Note: BioLORD semantic scores range from 0-1, with higher scores indicating stronger medical semantic relationships.\n"
+    
+    # Legacy semantic analysis (unmapped only - for backwards compatibility)
+    legacy_semantic_summary = ""
+    if semantic_analysis and semantic_analysis.get('unmapped_analysis') and not biolord_comprehensive_analysis:
         semantic_items = []
         for item in semantic_analysis['unmapped_analysis']:
             original = item['original_term']
@@ -738,8 +797,8 @@ def generate_comprehensive_report(
             semantic_items.append(
                 f"  • '{original}' → closest: '{top_match}' (similarity: {score:.2f}, confidence: {confidence})"
             )
-        semantic_summary = f"\n\n**SEMANTIC ANALYSIS** (Unmapped Terms - AI Interpretation):\n" + "\n".join(semantic_items)
-        semantic_summary += "\n  Note: These are AI-suggested interpretations based on semantic similarity, not exact matches from the medical dictionary."
+        legacy_semantic_summary = f"\n\n**LEGACY SEMANTIC ANALYSIS** (Unmapped Terms Only):\n" + "\n".join(semantic_items)
+        legacy_semantic_summary += "\n  Note: Legacy analysis - consider using BioLORD comprehensive analysis instead.\n"
     
     user_prompt = f"""**PATIENT'S ORIGINAL DESCRIPTION** ({detected_language}):
 {original_text}
@@ -752,12 +811,13 @@ def generate_comprehensive_report(
 - Emotional Impact: {structured_data.get('emotion', 'None detected')}
 - Functional Impact: {structured_data.get('functional_impact', 'Not stated')}
 
-**TERM MAPPINGS** ({detected_language} → English):
-{mappings_summary}{semantic_summary}
+**DICTIONARY TERM MAPPINGS** ({detected_language} → English):
+{mappings_summary}{biolord_summary}{legacy_semantic_summary}
 
 **CLINICAL RECOMMENDATIONS** (From rule engine):
 {recommendations_summary}
 
+REMEMBER: Start your report with BioLORD Medical Terminology Mapping section (SECTION 1) showing ALL analyzed terms.
 Please generate a comprehensive {"bilingual" if not is_english_only else ""} clinical report."""
 
     try:
@@ -776,6 +836,9 @@ Please generate a comprehensive {"bilingual" if not is_english_only else ""} cli
     except Exception as e:
         # Fallback: structured template
         fallback_report = f"""**Clinical Report | 临床报告**
+
+**BioLORD Medical Terminology Analysis | BioLORD医学术语分析**:
+{biolord_summary if biolord_summary else "BioLORD analysis not available"}
 
 **Patient Description** ({detected_language}):
 {original_text}

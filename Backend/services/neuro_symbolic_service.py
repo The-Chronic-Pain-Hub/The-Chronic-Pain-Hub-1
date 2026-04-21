@@ -152,6 +152,43 @@ def analyze_pain_neuro_symbolic(patient_text: str) -> dict:
             print(f"[Neuro-Symbolic Service] Found {len(unique_descriptors)} unique descriptors: {unique_descriptors}")
             print(f"[Neuro-Symbolic Service] → Will match against multilingual pain dictionary ({language_name})")
         
+        # Step 4.6: 🔬 BioLORD Analysis for ALL terms (parallel processing with dictionary matching)
+        print("[Neuro-Symbolic Service] 🔬 BioLORD Analysis: ALL terms (dictionary-matched + unmapped)...")
+        from services.semantic_distance_service_biolord import analyze_all_terms_with_biolord
+        
+        # Combine all terms: dictionary-matched + unmapped
+        all_terms_for_biolord = []
+        term_sources = []
+        
+        # Add dictionary-matched terms
+        for term in matched_terms:
+            all_terms_for_biolord.append(term)
+            term_sources.append("dictionary")
+        
+        # Add unmapped terms
+        for term in unique_descriptors:
+            all_terms_for_biolord.append(term)
+            term_sources.append("unmapped")
+        
+        # Run BioLORD analysis on all terms
+        biolord_comprehensive_analysis = None
+        if all_terms_for_biolord:
+            print(f"[Neuro-Symbolic Service]   Total terms for BioLORD: {len(all_terms_for_biolord)}")
+            print(f"[Neuro-Symbolic Service]   - Dictionary-matched: {sum(1 for s in term_sources if s == 'dictionary')}")
+            print(f"[Neuro-Symbolic Service]   - Unmapped: {sum(1 for s in term_sources if s == 'unmapped')}")
+            
+            biolord_comprehensive_analysis = analyze_all_terms_with_biolord(
+                all_terms=all_terms_for_biolord,
+                term_sources=term_sources,
+                patient_text=normalized_text,
+                language=language_name
+            )
+            
+            if biolord_comprehensive_analysis:
+                dict_verified = len(biolord_comprehensive_analysis.get('dictionary_verified', []))
+                unmapped_suggested = len(biolord_comprehensive_analysis.get('unmapped_suggestions', []))
+                print(f"[Neuro-Symbolic Service] ✓ BioLORD completed: {dict_verified} dict verified, {unmapped_suggested} unmapped analyzed")
+        
         # Prepare LLM entities for pipeline
         llm_entities = {
             "pain_descriptors": unique_descriptors,  # Original native language text (for multilingual semantic analysis V2)
@@ -165,6 +202,10 @@ def analyze_pain_neuro_symbolic(patient_text: str) -> dict:
         # Step 5: Execute complete pipeline (ontology mapping + rule engine)
         print("[Neuro-Symbolic Service] Executing pipeline...")
         pipeline = get_pipeline()
+        
+        # Pass BioLORD analysis to pipeline
+        pipeline.biolord_comprehensive_analysis = biolord_comprehensive_analysis
+        
         report: ExplainableReport = pipeline.execute_with_mappings(
             normalized_text, 
             llm_entities,
@@ -198,6 +239,7 @@ def analyze_pain_neuro_symbolic(patient_text: str) -> dict:
             },
             "structured_data": report.structured_data.model_dump(),
             "ontology_mapping_trace": report.ontology_mapping_trace,
+            "biolord_comprehensive_analysis": biolord_comprehensive_analysis,  # NEW: All terms BioLORD analysis
             "clinical_recommendations": [
                 rec.model_dump() for rec in report.clinical_recommendations
             ],

@@ -28,7 +28,8 @@ from ontology.pain_mapping_multilingual import (
 from ontology.pain_mapping import get_unmapped_descriptors, suggest_similar_terms, verify_all_terms_with_semantic_model
 from utils.language_detector import detect_language, get_language_name, LanguageCode
 from inference.rule_engine import RuleEngine
-from utils.report_generator import generate_comprehensive_report, translate_to_english_simple
+from services.llm_service import generate_comprehensive_report
+from utils.report_generator import translate_to_english_simple
 
 # Smart semantic distance service selection
 EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL", "biolord")
@@ -423,14 +424,15 @@ class PainAssessmentPipeline:
         rule-based analysis completes.
         """
         try:
-            # Call GPT to generate comprehensive report
+            # Call GPT to generate comprehensive report with BioLORD analysis of ALL terms
             report = generate_comprehensive_report(
                 original_text=self.original_patient_text,
                 structured_data=pain_data.model_dump(),
                 ontology_mappings=self.current_ontology_mappings,
                 clinical_recommendations=[rec.model_dump() for rec in recommendations],
                 detected_language=self.detected_language or "Chinese",  # Default to Chinese
-                semantic_analysis=self.semantic_analysis  # Pass semantic distance results
+                semantic_analysis=self.semantic_analysis,  # Legacy: unmapped terms only
+                biolord_comprehensive_analysis=getattr(self, 'biolord_comprehensive_analysis', None)  # NEW: All terms BioLORD analysis
             )
             
             # Add MAPPED terms section (direct dictionary matches)

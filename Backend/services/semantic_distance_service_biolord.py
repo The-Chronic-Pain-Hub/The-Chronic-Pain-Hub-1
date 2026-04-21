@@ -318,3 +318,141 @@ def calculate_semantic_distances(
         "matching_strategy": "same-language-mcgill",
         "language": language
     }
+
+
+def analyze_all_terms_with_biolord(
+    all_terms: List[str],
+    term_sources: List[str],  # "dictionary" or "unmapped" for each term
+    patient_text: str,
+    language: str
+) -> Dict:
+    """
+    Analyze ALL pain terms (both dictionary-matched and unmapped) through BioLORD.
+    
+    This provides semantic verification for dictionary matches and suggestions for unmapped terms.
+    Runs in parallel with dictionary matching for comprehensive pain terminology analysis.
+    
+    Args:
+        all_terms: List of all pain terms to analyze (both matched and unmapped)
+        term_sources: List indicating source of each term ("dictionary" or "unmapped")
+        patient_text: Full patient text for context
+        language: Detected language name (e.g., "Chinese", "Korean", "Spanish")
+    
+    Returns:
+        Dictionary with:
+        - dictionary_verified: BioLORD verification of dictionary-matched terms
+        - unmapped_suggestions: BioLORD suggestions for unmapped terms
+        - all_analysis: Combined analysis of all terms
+    """
+    if not all_terms:
+        return None
+    
+    # Map language names to codes
+    language_map = {
+        "Chinese": "zh",
+        "Korean": "ko",
+        "Spanish": "es",
+        "Hmong": "hmong",
+        "English": "en"
+    }
+    
+    lang_code = language_map.get(language, "en")
+    
+    # Skip for English
+    if lang_code == "en":
+        print(f"[BioLORD-All] Skipping - English terms already standardized")
+        return None
+    
+    # Check if we have McGill translations
+    if lang_code not in MCGILL_EMBEDDINGS_CACHE:
+        print(f"[BioLORD-All] ⚠️ No McGill translations cached for {language}")
+        return None
+    
+    # Load model
+    try:
+        model = load_biolord_model()
+    except Exception as e:
+        print(f"[BioLORD-All] ❌ Model not available: {e}")
+        return None
+    
+    lang_cache = MCGILL_EMBEDDINGS_CACHE[lang_code]
+    
+    print(f"[BioLORD-All] 🔬 Analyzing ALL {len(all_terms)} terms through BioLORD")
+    print(f"[BioLORD-All]   Dictionary-matched: {sum(1 for s in term_sources if s == 'dictionary')}")
+    print(f"[BioLORD-All]   Unmapped: {sum(1 for s in term_sources if s == 'unmapped')}")
+    
+    # Generate embeddings for all terms
+    all_embeddings = model.encode(
+        all_terms,
+        batch_size=16,
+        show_progress_bar=False,
+        convert_to_numpy=True
+    )
+    
+    # Analyze each term
+    dictionary_verified = []
+    unmapped_suggestions = []
+    all_analysis = []
+    
+    for i, (patient_term, source) in enumerate(zip(all_terms, term_sources)):
+        similarities = []
+        
+        # Compare with McGill translations
+        for j, mcgill_data in enumerate(lang_cache["metadata"]):
+            score = cosine_similarity(
+                all_embeddings[i],
+                lang_cache["embeddings"][j]
+            )
+            
+            similarities.append({
+                "native_term": mcgill_data["native_term"],
+                "english": mcgill_data["english"],
+                "pain_type": mcgill_data["pain_type"],
+                "dimension": mcgill_data["dimension"],
+                "is_alias": mcgill_data.get("is_alias", False),
+                "score": float(score)
+            })
+        
+        # Sort by similarity
+        similarities.sort(key=lambda x: x["score"], reverse=True)
+        top_matches = similarities[:3]
+        best_score = top_matches[0]["score"]
+        
+        # Determine confidence
+        if best_score > 0.75:
+            confidence = "high"
+        elif best_score > 0.60:
+            confidence = "medium"
+        else:
+            confidence = "low"
+        
+        result = {
+            "original_term": patient_term,
+            "matched_mcgill_native": top_matches[0]["native_term"],
+            "matched_standard_english": top_matches[0]["english"],
+            "closest_matches": top_matches,
+            "confidence": confidence,
+            "semantic_score": best_score,
+            "language": lang_code,
+            "source": source,  # "dictionary" or "unmapped"
+            "model": "BioLORD-2023-M"
+        }
+        
+        all_analysis.append(result)
+        
+        if source == "dictionary":
+            dictionary_verified.append(result)
+            print(f"[BioLORD-All]   ✓ Dict verified: '{patient_term}' → BioLORD: '{top_matches[0]['native_term']}' ({top_matches[0]['english']}) [score: {best_score:.3f}]")
+        else:
+            unmapped_suggestions.append(result)
+            print(f"[BioLORD-All]   🔍 Unmapped: '{patient_term}' → '{top_matches[0]['native_term']}' ({top_matches[0]['english']}) [score: {best_score:.3f}, {confidence}]")
+    
+    return {
+        "all_analysis": all_analysis,
+        "dictionary_verified": dictionary_verified,
+        "unmapped_suggestions": unmapped_suggestions,
+        "model_used": "BioLORD-2023-M",
+        "matching_strategy": "comprehensive-all-terms",
+        "language": language,
+        "total_terms": len(all_terms)
+    }
