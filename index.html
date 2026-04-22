@@ -37,16 +37,19 @@
           <div class="search-card">
             <label for="zip">Start with a zip code and a need</label>
             <div class="search-row">
-              <input id="zip" name="zip" type="text" placeholder="Zip code" />
-              <select name="need">
+              <input id="zip" name="zip" type="text" inputmode="numeric" maxlength="5" autocomplete="postal-code" placeholder="Zip code" />
+              <select id="need" name="need">
                 <option>Sleep support</option>
                 <option>Mobility and movement</option>
                 <option>Mental health care</option>
                 <option>Care navigation</option>
                 <option>Non-pharmaceutical options</option>
               </select>
-              <button type="button">Search support</button>
+              <button id="supportSearchBtn" type="button">Search support</button>
             </div>
+            <p id="supportSearchStatus" class="search-status" aria-live="polite"></p>
+            <p class="search-note">Results use live public NPPES records filtered by listed practice location ZIP. Verify availability, licensing, insurance, and clinical fit before contacting a provider.</p>
+            <div id="supportResults" class="support-results" aria-live="polite"></div>
             <div class="search-chips">
               <span class="chip">Pain flare</span>
               <span class="chip">Body map</span>

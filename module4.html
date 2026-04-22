@@ -97,6 +97,28 @@
       </div>
     </section>
 
+    <section class="section module-search-section">
+      <div class="container">
+        <div class="search-card module-search-card">
+          <label for="zip">Search local care by ZIP code and need</label>
+          <div class="search-row">
+            <input id="zip" name="zip" type="text" inputmode="numeric" maxlength="5" autocomplete="postal-code" placeholder="Zip code" />
+            <select id="need" name="need">
+              <option>Sleep support</option>
+              <option>Mobility and movement</option>
+              <option>Mental health care</option>
+              <option>Care navigation</option>
+              <option>Non-pharmaceutical options</option>
+            </select>
+            <button id="supportSearchBtn" type="button">Search support</button>
+          </div>
+          <p id="supportSearchStatus" class="search-status" aria-live="polite"></p>
+          <p class="search-note">Results use live public NPPES records filtered by listed practice location ZIP. Verify availability, licensing, insurance, and clinical fit before contacting a provider.</p>
+          <div id="supportResults" class="support-results" aria-live="polite"></div>
+        </div>
+      </div>
+    </section>
+
     <section class="section module-dashboard">
       <div class="container">
         <div class="section-title">
