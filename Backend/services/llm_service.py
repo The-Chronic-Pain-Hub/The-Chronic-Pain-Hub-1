@@ -682,12 +682,12 @@ def generate_comprehensive_report(
 
 **YOUR TASK**: Create a well-structured clinical report with the following sections IN THIS EXACT ORDER:
 
-## 1. Translation | 翻译
+## 1. Translation
 - Provide FULL English translation of patient's original description
 - Keep natural, conversational tone
 - Preserve all details from original text
 
-## 2. Cultural & Metaphorical Expressions | 文化隐喻
+## 2. Cultural & Metaphorical Expressions
 - Identify any metaphors or culturally-specific expressions
 - Explain their medical interpretation
 - Example: "像被大象踩" (feels like being stepped on by elephant) = severe pressure pain
@@ -695,7 +695,7 @@ def generate_comprehensive_report(
 - Mark clearly: **(AI-interpreted from cultural context)**
 - If no metaphors found, write: "No culturally-specific metaphors detected."
 
-## 3. BioLORD Medical Terminology Mapping | BioLORD医学术语映射
+## 3. BioLORD Medical Terminology Mapping | BioLORD
 - Display ALL pain terms analyzed by BioLORD AI model
 - Format as clear table:
 
@@ -709,13 +709,13 @@ def generate_comprehensive_report(
 |----------|-------------------|----------------|------------|
 | [term] | [suggestion] | 0.XXX | low/med |
 
-## 4. Clinical Assessment | 临床评估
+## 4. Clinical Assessment
 - **Pain Classification**: Neuropathic vs Nociceptive vs Mixed
 - **Key Characteristics**: Location, duration, intensity, pattern
 - **Psychosocial Impact**: Emotional distress, functional limitations
 - Use clear, empathetic language
 
-## 5. Clinical Recommendations | 临床建议
+## 5. Clinical Recommendations
 - List each recommendation with clinical rationale
 - Reference triggering rules (e.g., "RULE_A: Chronic Pain + Depression")
 - Provide actionable next steps
@@ -835,23 +835,23 @@ Please generate a comprehensive {"bilingual" if not is_english_only else ""} cli
     
     except Exception as e:
         # Fallback: structured template
-        fallback_report = f"""**Clinical Report | 临床报告**
+        fallback_report = f"""**Clinical Report**
 
-**BioLORD Medical Terminology Analysis | BioLORD医学术语分析**:
+**BioLORD Medical Terminology Analysis**:
 {biolord_summary if biolord_summary else "BioLORD analysis not available"}
 
 **Patient Description** ({detected_language}):
 {original_text}
 
-**Assessment | 评估**:
+**Assessment**:
 - Pain Type: {structured_data.get('pain_type', 'N/A')}
 - Location: {structured_data.get('location', 'N/A')}
 - Duration: {structured_data.get('temporal_pattern', 'N/A')}
 
-**Term Mappings | 术语映射**:
+**Term Mappings**:
 {mappings_summary}
 
-**Recommendations | 建议**:
+**Recommendations**:
 {recommendations_summary}
 
 (Note: GPT report generation failed: {str(e)})"""
