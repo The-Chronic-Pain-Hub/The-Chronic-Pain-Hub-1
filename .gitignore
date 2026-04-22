@@ -1,0 +1,25 @@
+# Audio files
+*.wav
+*.mp3
+*.m4a
+*.ogg
+*.webm
+*.flac
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+.env
+
+# Data folders
+data/
+DAIC-WOZ/
+DAIC-WOZ-zips/
+
+# Mac
+.DS_Store
+
+# Vercel
+voice-health-api/
+.vercel/

@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Module 3 | The Chronic Pain Hub</title>
-  <meta name="description" content="Module 3 captures five-second vocal samples to produce a vocal strain index." />
+  <meta name="description" content="Module 3 captures vocal samples to analyze acoustic biomarkers." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@400;600;700&family=Sora:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
@@ -28,12 +28,13 @@
   </header>
 
   <main>
+    <!-- Hero -->
     <section class="module-hero">
       <div class="container hero-grid">
         <div>
           <p class="hero-eyebrow">Module 3</p>
           <h1>Low Burden Tracking and Bio-Acoustic Micro-Capture</h1>
-          <p>Goal: provide an objective pain truth-check through five-second voice bursts that signal vocal strain.</p>
+          <p>Provide an objective pain truth-check through voice samples that analyze vocal strain patterns using AI acoustic analysis.</p>
           <div class="module-links">
             <a href="module2.html">Back to Module 2</a>
             <a href="module4.html">Next: Pain Navigation</a>
@@ -42,39 +43,244 @@
         <div class="hero-card">
           <p class="panel-title">Core design</p>
           <ul>
-            <li>One-tap flare button</li>
-            <li>Optional five-second voice memo</li>
-            <li>Optional animation tap</li>
-            <li>No long forms</li>
+            <li>One-tap voice recording</li>
+            <li>AI acoustic feature extraction</li>
+            <li>Vocal strain index output</li>
+            <li>No long forms required</li>
           </ul>
         </div>
       </div>
     </section>
 
-    <section class="module-content">
-      <div class="container content-grid">
-        <div>
-          <h2>How it works</h2>
-          <p>The system analyzes how a patient speaks, not what is said. Acoustic feature extraction looks at shimmer, jitter, and vocal strain patterns.</p>
-          <p>The AI outputs a vocal strain index on a 1.0 to 5.0 scale and tracks patterns across time.</p>
-          <h2>AI layer</h2>
-          <ul>
-            <li>Extract key acoustic features</li>
-            <li>Identify distress tone</li>
-            <li>Cluster patterns across flare events</li>
-            <li>Generate a simple weekly pattern visualization</li>
-          </ul>
+    <!-- Voice Analysis Tool -->
+    <section class="section">
+      <div class="container">
+        <div class="section-title">
+          <h2>Voice Analysis</h2>
+          <p>Record or upload a voice sample to receive your vocal strain analysis.</p>
         </div>
-        <div>
-          <div class="info-card reveal">
-            <h3>Research value</h3>
-            <p>Positioned as a digital biomarker for pain intensity and a strong fit for R21 grant work.</p>
+
+        <div class="dashboard-grid">
+
+          <!-- Input Card -->
+          <div class="dashboard-card" id="input-card">
+            <div class="dashboard-card-head">
+              <h3>Capture Voice Sample</h3>
+              <span class="dashboard-chip dashboard-chip-cool">AI Analysis</span>
+            </div>
+
+            <!-- Upload zone -->
+            <div id="upload-zone" style="
+              border: 2px dashed var(--border);
+              border-radius: 16px;
+              padding: 32px 20px;
+              text-align: center;
+              cursor: pointer;
+              position: relative;
+              transition: border-color 0.2s, background 0.2s;
+              margin-bottom: 16px;
+            ">
+              <input type="file" id="file-input" accept=".wav,.mp3,.m4a,.ogg"
+                style="position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%"/>
+              <div style="font-size:28px;margin-bottom:10px;">🎵</div>
+              <p style="font-weight:600;margin-bottom:4px;">Drop audio file here</p>
+              <p style="color:var(--ink-muted);font-size:0.9rem;">Supports .wav, .mp3, .m4a — 30+ seconds recommended</p>
+              <p id="file-selected" style="display:none;margin-top:10px;color:var(--accent-cool);font-size:0.9rem;"></p>
+            </div>
+
+            <!-- Divider -->
+            <div style="display:flex;align-items:center;gap:12px;margin:16px 0;color:var(--ink-muted);font-size:0.85rem;">
+              <div style="flex:1;height:1px;background:var(--border);"></div>
+              or record live
+              <div style="flex:1;height:1px;background:var(--border);"></div>
+            </div>
+
+            <!-- Record button -->
+            <div style="text-align:center;margin-bottom:16px;">
+              <button id="record-btn" style="
+                display:inline-flex;
+                align-items:center;
+                gap:8px;
+                background:transparent;
+                border:1px solid var(--border);
+                color:var(--ink);
+                font-family:'Sora',sans-serif;
+                font-size:0.95rem;
+                padding:10px 24px;
+                border-radius:999px;
+                cursor:pointer;
+                transition:all 0.2s;
+              ">
+                <span id="record-dot" style="
+                  width:8px;height:8px;
+                  border-radius:50%;
+                  background:var(--accent);
+                  display:inline-block;
+                "></span>
+                <span id="record-label">Start Recording</span>
+              </button>
+              <p id="record-timer" style="margin-top:8px;font-size:0.85rem;color:var(--ink-muted);min-height:18px;"></p>
+            </div>
+
+            <button id="analyze-btn" disabled style="
+              width:100%;
+              padding:14px;
+              background:var(--accent);
+              color:#fff;
+              border:none;
+              border-radius:999px;
+              font-family:'Sora',sans-serif;
+              font-size:1rem;
+              font-weight:600;
+              cursor:pointer;
+              opacity:0.4;
+              transition:opacity 0.2s;
+            ">
+              Analyze Voice Sample →
+            </button>
           </div>
-          <div class="info-card reveal" style="margin-top: 18px;">
-            <h3>Use case</h3>
-            <p>Creates a low-burden signal when patients are exhausted or struggle to speak in detail.</p>
+
+          <!-- Results Card -->
+          <div class="dashboard-card" id="results-card">
+            <div class="dashboard-card-head">
+              <h3>Analysis Results</h3>
+              <span class="dashboard-chip dashboard-chip-sun" id="status-chip">Waiting</span>
+            </div>
+
+            <!-- Loading state -->
+            <div id="loading-state" style="text-align:center;padding:40px 20px;display:none;">
+              <div id="spinner" style="
+                width:36px;height:36px;
+                border:3px solid var(--border);
+                border-top-color:var(--accent-cool);
+                border-radius:50%;
+                animation:spin 0.8s linear infinite;
+                margin:0 auto 16px;
+              "></div>
+              <p style="color:var(--ink-muted);">Analyzing vocal patterns...</p>
+              <div style="margin-top:12px;font-size:0.82rem;color:var(--ink-muted);">
+                <p id="step1" style="opacity:0;transition:opacity 0.5s;">→ preprocessing waveform</p>
+                <p id="step2" style="opacity:0;transition:opacity 0.5s;margin-top:4px;">→ extracting acoustic features</p>
+                <p id="step3" style="opacity:0;transition:opacity 0.5s;margin-top:4px;">→ running classifier</p>
+              </div>
+            </div>
+
+            <!-- Empty state -->
+            <div id="empty-state" style="text-align:center;padding:40px 20px;">
+              <div style="font-size:48px;margin-bottom:12px;">🎙️</div>
+              <p style="color:var(--ink-muted);">Record or upload a voice sample to see your results here.</p>
+            </div>
+
+            <!-- Result state -->
+            <div id="result-state" style="display:none;">
+              <div class="metric-grid">
+                <div class="metric-card">
+                  <div class="metric-value" id="result-label">—</div>
+                  <div class="metric-label">Prediction</div>
+                </div>
+                <div class="metric-card">
+                  <div class="metric-value" id="conf-value">—</div>
+                  <div class="metric-label">Confidence</div>
+                </div>
+              </div>
+
+              <!-- Probability bars -->
+              <div style="margin-bottom:12px;">
+                <div style="display:flex;justify-content:space-between;font-size:0.85rem;color:var(--ink-muted);margin-bottom:6px;">
+                  <span>Depression probability</span>
+                  <span id="dep-pct" style="color:var(--ink);font-weight:600;">—</span>
+                </div>
+                <div style="height:8px;background:var(--border);border-radius:4px;overflow:hidden;">
+                  <div id="dep-bar" style="height:100%;background:var(--accent);border-radius:4px;width:0%;transition:width 1s ease;"></div>
+                </div>
+              </div>
+
+              <div style="margin-bottom:16px;">
+                <div style="display:flex;justify-content:space-between;font-size:0.85rem;color:var(--ink-muted);margin-bottom:6px;">
+                  <span>No depression probability</span>
+                  <span id="nodep-pct" style="color:var(--ink);font-weight:600;">—</span>
+                </div>
+                <div style="height:8px;background:var(--border);border-radius:4px;overflow:hidden;">
+                  <div id="nodep-bar" style="height:100%;background:var(--accent-cool);border-radius:4px;width:0%;transition:width 1s ease;"></div>
+                </div>
+              </div>
+
+              <!-- Reasoning box -->
+              <div id="reasoning-box" style="
+                background:#f0f7f6;
+                border:1px solid rgba(47,127,125,0.3);
+                border-radius:12px;
+                padding:14px;
+                font-size:0.85rem;
+                color:var(--ink-muted);
+                margin-bottom:16px;
+                display:none;
+              ">
+                <strong style="color:var(--accent-cool);">Key observation</strong>
+                <p id="reasoning-text" style="margin-top:4px;"></p>
+              </div>
+
+              <!-- Model info -->
+              <div style="
+                background:#fff9f0;
+                border-radius:12px;
+                padding:14px;
+                font-size:0.85rem;
+                color:var(--ink-muted);
+                border:1px solid var(--border);
+                margin-bottom:16px;
+              ">
+                wav2vec2 · DAIC-WOZ dataset · 107 participants · 73% accuracy · Research use only
+              </div>
+
+              <button id="reset-btn" style="
+                width:100%;
+                padding:12px;
+                background:transparent;
+                border:1px solid var(--border);
+                color:var(--ink-muted);
+                border-radius:999px;
+                font-family:'Sora',sans-serif;
+                font-size:0.9rem;
+                cursor:pointer;
+                transition:all 0.2s;
+              ">
+                ← Analyze another sample
+              </button>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- How it works -->
+        <div style="margin-top:48px;">
+          <div class="section-title">
+            <h2>How it works</h2>
+          </div>
+          <div class="steps">
+            <div class="step-card reveal">
+              <div class="step-number">1</div>
+              <h3>Capture</h3>
+              <p style="color:var(--ink-muted);">Record a voice sample or upload an existing audio file. Speak naturally for 30+ seconds for best results.</p>
+            </div>
+            <div class="step-card reveal">
+              <div class="step-number">2</div>
+              <h3>Extract</h3>
+              <p style="color:var(--ink-muted);">wav2vec2 extracts 768 acoustic features capturing pitch, rhythm, energy, and vocal quality patterns.</p>
+            </div>
+            <div class="step-card reveal">
+              <div class="step-number">3</div>
+              <h3>Analyze</h3>
+              <p style="color:var(--ink-muted);">A logistic regression classifier trained on clinical interview data identifies vocal patterns associated with depression.</p>
+            </div>
+            <div class="step-card reveal">
+              <div class="step-number">4</div>
+              <h3>Report</h3>
+              <p style="color:var(--ink-muted);">Results show depression probability and confidence score. No audio is stored or retained.</p>
+            </div>
           </div>
         </div>
+
       </div>
     </section>
   </main>
@@ -100,5 +306,6 @@
   </footer>
 
   <script src="script.js"></script>
+  <script src="module3.js"></script>
 </body>
 </html>
