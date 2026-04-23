@@ -151,11 +151,14 @@ async def analyze_depression(file: UploadFile = File(...)):
         # Convert to WAV format if needed (handles webm/ogg from browser)
         from pydub import AudioSegment
         converted_path = tmp_path + "_converted.wav"
+        print(f"[Depression Analyze] Converting {tmp_path} to WAV...")
         audio = AudioSegment.from_file(tmp_path)
         audio.export(converted_path, format="wav")
+        print(f"[Depression Analyze] Conversion complete, analyzing...")
         
         # Analyze using depression detection service
         result = analyze_depression_from_audio(converted_path)
+        print(f"[Depression Analyze] Analysis complete: {result}")
         
         # Cleanup
         os.unlink(converted_path)
@@ -165,6 +168,9 @@ async def analyze_depression(file: UploadFile = File(...)):
         
     except Exception as e:
         # Cleanup on error
+        print(f"[Depression Analyze] ERROR: {str(e)}")
+        import traceback
+        traceback.print_exc()
         if os.path.exists(tmp_path):
             os.unlink(tmp_path)
         return {"error": str(e)}
