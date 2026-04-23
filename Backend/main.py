@@ -45,6 +45,19 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Middleware to prevent caching of static files (images, CSS, JS)
+@app.middleware("http")
+async def add_no_cache_headers(request: Request, call_next):
+    response = await call_next(request)
+    
+    # Add no-cache headers for images and static files
+    if any(request.url.path.endswith(ext) for ext in ['.png', '.jpg', '.jpeg', '.gif', '.css', '.js', '.svg']):
+        response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate, max-age=0"
+        response.headers["Pragma"] = "no-cache"
+        response.headers["Expires"] = "0"
+    
+    return response
+
 # Get parent directory (root of the project)
 parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 
