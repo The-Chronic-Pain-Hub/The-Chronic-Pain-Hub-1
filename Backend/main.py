@@ -1,8 +1,9 @@
-from fastapi import FastAPI, File, UploadFile
+from fastapi import FastAPI, File, UploadFile, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import HTMLResponse, FileResponse
+from fastapi.responses import HTMLResponse, FileResponse, Response
 import os
+import httpx
 
 from services.whisper_service import transcribeAudio
 from services.llm_service import analyzePainDescription
@@ -201,6 +202,48 @@ async def getSystemInfo():
         return {
             "status": "error",
             "message": str(e)
+        }
+
+
+# ========== Module 4: NPPES API Proxy ==========
+
+@app.get("/api/nppes")
+async def proxyNPPES(request: Request):
+    """
+    Proxy requests to CMS NPPES API
+    
+    Module 4 uses this to search for healthcare providers.
+    Proxying allows CORS-free access to the NPPES registry.
+    """
+    try:
+        # Get query parameters from request
+        query_params = dict(request.query_params)
+        
+        # Build NPPES URL
+        nppes_url = "https://npiregistry.cms.hhs.gov/api/?"
+        if query_params:
+            from urllib.parse import urlencode
+            nppes_url += urlencode(query_params)
+        
+        # Forward request to NPPES
+        async with httpx.AsyncClient(timeout=20.0) as client:
+            response = await client.get(nppes_url)
+            
+            return Response(
+                content=response.content,
+                status_code=response.status_code,
+                media_type=response.headers.get("content-type", "application/json"),
+                headers={"Access-Control-Allow-Origin": "*"}
+            )
+    except httpx.TimeoutException:
+        return {
+            "status": "error",
+            "message": "NPPES API request timed out"
+        }
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": f"NPPES proxy error: {str(e)}"
         }
 
 

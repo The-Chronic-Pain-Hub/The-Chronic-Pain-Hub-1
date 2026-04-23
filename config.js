@@ -3,21 +3,9 @@
 
 // Automatic configuration based on environment
 const getApiBase = () => {
-  // If running from file:// protocol (directly opened HTML)
-  if (window.location.protocol === 'file:') {
-    // Use localhost backend
-    return 'http://localhost:8000';
-  }
-  
-  // If running from http://localhost or http://127.0.0.1
-  if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-    // Use same origin (empty string means relative URLs)
-    return '';
-  }
-  
-  // If running from a remote server (e.g., GitHub Pages, ngrok-served HTML)
-  // Return the ngrok URL or your production backend URL
-  return 'https://beatriz-steamy-caroline.ngrok-free.dev';  // ⚠️ CHANGE THIS to your ngrok URL
+  // Always use the current origin (works for localhost and ngrok)
+  // The Module4_Server.py proxies backend requests through /api/pain-mapping/*
+  return window.location.origin;
 };
 
 // Export the API base URL
