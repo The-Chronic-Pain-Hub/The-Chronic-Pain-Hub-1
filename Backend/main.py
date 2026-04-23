@@ -4,6 +4,8 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse, FileResponse, Response
 import os
 import httpx
+import asyncio
+from functools import partial
 
 from services.whisper_service import transcribeAudio
 from services.llm_service import analyzePainDescription
@@ -70,9 +72,9 @@ async def analyze_audio(file: UploadFile = File(...)):
     audioBytes = await file.read()
     
     try:
-        transcription = transcribeAudio(audioBytes, language=None)
-        
-        analysis = analyzePainDescription(transcription["text"])
+        # Run transcription and analysis in background threads
+        transcription = await asyncio.to_thread(transcribeAudio, audioBytes, None)
+        analysis = await asyncio.to_thread(analyzePainDescription, transcription["text"])
         
         return {
             "status": "success",
@@ -94,7 +96,8 @@ async def analyze_audio(file: UploadFile = File(...)):
 @app.post("/api/follow-up")
 async def getFollowUpQuestion(request: ConversationRequest):
     try:
-        followUp = generateFollowUpQuestions(request.history)
+        # Run LLM call in background thread to avoid blocking
+        followUp = await asyncio.to_thread(generateFollowUpQuestions, request.history)
         
         return {
             "status": "success",
@@ -128,8 +131,9 @@ async def analyzeTextNeuroSymbolic(request: dict):
                 "message": "No text provided"
             }
         
-        # Execute neuro-symbolic pipeline
-        analysis = analyze_pain_neuro_symbolic(patient_text)
+        # Execute neuro-symbolic pipeline in a background thread to avoid blocking
+        # This allows other requests (like loading new pages) to be handled concurrently
+        analysis = await asyncio.to_thread(analyze_pain_neuro_symbolic, patient_text)
         return analysis
         
     except Exception as e:
@@ -159,12 +163,12 @@ async def analyzeAudioNeuroSymbolic(file: UploadFile = File(...)):
     audioBytes = await file.read()
     
     try:
-        # Step 1: Transcribe audio
-        transcription_result = transcribeAudio(audioBytes, language=None)
+        # Step 1: Transcribe audio (run in background thread)
+        transcription_result = await asyncio.to_thread(transcribeAudio, audioBytes, None)
         original_transcription = transcription_result["text"]
         
-        # Step 2: Neuro-symbolic analysis (includes normalization + ontology mapping)
-        analysis = analyze_pain_neuro_symbolic(original_transcription)
+        # Step 2: Neuro-symbolic analysis (run in background thread)
+        analysis = await asyncio.to_thread(analyze_pain_neuro_symbolic, original_transcription)
         
         # Merge transcription info with analysis results
         # The analysis already contains transcription normalization in analysis["transcription"]
@@ -295,8 +299,8 @@ async def generatePainReport(pain_data: PainMapData):
     - Recommended specialists
     """
     try:
-        # Generate report
-        report = pain_mapping_service.generate_report(pain_data)
+        # Generate report in background thread to avoid blocking
+        report = await asyncio.to_thread(pain_mapping_service.generate_report, pain_data)
         
         return {
             "status": "success",
