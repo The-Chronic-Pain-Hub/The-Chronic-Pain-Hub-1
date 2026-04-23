@@ -62,13 +62,44 @@ export default function App() {
     const breakdown = calculateSensationBreakdown();
     const total = Object.values(strokeCounts).reduce((sum, count) => sum + count, 0);
 
+    // Create pain regions based on strokes (simplified version)
+    const pain_regions = [];
+    
+    // Get dominant sensation type
+    const dominantType = Object.entries(strokeCounts).reduce((a, b) => 
+      strokeCounts[a[0] as keyof typeof strokeCounts] > strokeCounts[b[0] as keyof typeof strokeCounts] ? a : b
+    )[0];
+
+    // Create a single region representing all painted areas
+    if (total > 0) {
+      pain_regions.push({
+        id: `region-${Date.now()}`,
+        name: "Pain Area",
+        view: "front",
+        sensation: dominantType,
+        intensity: intensity,
+        depth: depth,
+        strokes: Object.entries(strokeCounts)
+          .filter(([type, count]) => count > 0)
+          .flatMap(([type, count]) => 
+            Array(count).fill(null).map((_, i) => ({
+              x: Math.random() * 400,
+              y: Math.random() * 600,
+              type: type,
+              timestamp: new Date().toISOString()
+            }))
+          )
+      });
+    }
+
     return {
       session_id: sessionId,
       patient_id: null,
-      pain_regions: [],
+      pain_regions: pain_regions,
       overall_intensity: intensity,
       sensation_breakdown: breakdown,
       total_strokes: total,
+      neuropathic_indicators: strokeCounts.burning + strokeCounts.stabbing + strokeCounts.numbness + strokeCounts.tingling + strokeCounts.allodynia
     };
   };
 
@@ -83,7 +114,7 @@ export default function App() {
       }
     } catch (error) {
       console.error('Error generating report:', error);
-      alert('❌ Failed to generate report. Make sure the backend server is running at http://localhost:8000');
+      alert('❌ Failed to generate report. Make sure the Backend server is running!');
     } finally {
       setIsGeneratingReport(false);
     }
@@ -91,11 +122,7 @@ export default function App() {
 
   const handleSaveProgress = async () => {
     setIsSaving(true);
-    try {  onGenerateReport={handleGenerateReport}
-            onSaveProgress={handleSaveProgress}
-            isGeneratingReport={isGeneratingReport}
-            isSaving={isSaving}
-          
+    try {
       const painData = collectPainData();
       const result = await painMappingAPI.savePainMapping(painData);
       
@@ -104,7 +131,7 @@ export default function App() {
       }
     } catch (error) {
       console.error('Error saving progress:', error);
-      alert('❌ Failed to save progress. Make sure the backend server is running at http://localhost:8000');
+      alert('❌ Failed to save progress. Make sure the Backend server is running!');
     } finally {
       setIsSaving(false);
     }
