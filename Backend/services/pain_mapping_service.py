@@ -15,43 +15,43 @@ class PainMappingService:
     # Clinical significance of pain types
     PAIN_TYPE_CLINICAL = {
         "burning": {
-            "name": "Burning/燃烧感",
+            "name": "Burning",
             "indicator": "High Neuropathic Pain Indicator",
             "color": "#005EB8",
             "neuropathic": True
         },
         "aching": {
-            "name": "Aching/酸痛",
+            "name": "Aching",
             "indicator": "Musculoskeletal / Non-neuropathic Pain",
             "color": "#F1C40F",
             "neuropathic": False
         },
         "stabbing": {
-            "name": "Stabbing/刺痛",
+            "name": "Stabbing",
             "indicator": "Sharp Neuropathic Pain",
             "color": "#E74C3C",
             "neuropathic": True
         },
         "numbness": {
-            "name": "Numbness/麻木",
+            "name": "Numbness",
             "indicator": "Nerve Damage Indicator",
             "color": "#191C1E",
             "neuropathic": True
         },
         "tingling": {
-            "name": "Tingling/刺痛感",
+            "name": "Tingling",
             "indicator": "Paresthesia (Neuropathic)",
             "color": "#27AE60",
             "neuropathic": True
         },
         "allodynia": {
-            "name": "Touch Pain/触摸痛",
+            "name": "Touch Pain",
             "indicator": "Allodynia (Neuropathic)",
             "color": "#E67E22",
             "neuropathic": True
         },
         "other": {
-            "name": "Other/其他",
+            "name": "Other",
             "indicator": "Non-standard sensation",
             "color": "#9B59B6",
             "neuropathic": False
@@ -59,7 +59,28 @@ class PainMappingService:
     }
     
     def calculate_statistics(self, pain_data: PainMapData) -> Dict:
-        """Calculate pain statistics"""
+        """Calculate pain statistics from pain_data"""
+        # Use data already calculated by frontend if available
+        if pain_data.total_strokes and pain_data.total_strokes > 0:
+            # Frontend has already calculated the statistics
+            sensation_breakdown = pain_data.sensation_breakdown or {}
+            total_strokes = pain_data.total_strokes
+            
+            # Calculate neuropathic indicators
+            neuropathic_count = 0
+            for pain_type, percentage in sensation_breakdown.items():
+                if self.PAIN_TYPE_CLINICAL.get(pain_type, {}).get("neuropathic", False):
+                    # Convert percentage back to count
+                    neuropathic_count += (percentage * total_strokes) / 100
+            
+            return {
+                "total_strokes": total_strokes,
+                "sensation_breakdown": sensation_breakdown,
+                "neuropathic_indicators": int(neuropathic_count),
+                "overall_intensity": pain_data.overall_intensity or 0.0
+            }
+        
+        # Fallback: calculate from pain_regions if available
         total_strokes = 0
         sensation_counts = {}
         neuropathic_count = 0
@@ -85,7 +106,7 @@ class PainMappingService:
         if pain_data.pain_regions:
             avg_intensity = sum(r.intensity for r in pain_data.pain_regions) / len(pain_data.pain_regions)
         else:
-            avg_intensity = 0.0
+            avg_intensity = pain_data.overall_intensity or 0.0
         
         return {
             "total_strokes": total_strokes,
@@ -98,12 +119,14 @@ class PainMappingService:
         """Generate natural language summary"""
         summary_parts = []
         
-        # Basic statistics
-        num_regions = len(pain_data.pain_regions)
-        if num_regions == 0:
+        # Check if there's any pain data (from stats, not just pain_regions)
+        if stats["total_strokes"] == 0:
             return "No pain regions mapped yet."
         
-        summary_parts.append(f"Patient has mapped {num_regions} pain region(s).")
+        # Basic statistics - use canvas data presence as indicator
+        has_canvas_data = pain_data.front_canvas_data or pain_data.back_canvas_data
+        if has_canvas_data:
+            summary_parts.append(f"Patient has mapped pain across body regions.")
         
         # Intensity description
         intensity = stats["overall_intensity"]
@@ -111,8 +134,10 @@ class PainMappingService:
             intensity_desc = "severe pain"
         elif intensity >= 4:
             intensity_desc = "moderate pain"
-        else:
+        elif intensity > 0:
             intensity_desc = "mild pain"
+        else:
+            intensity_desc = "minimal pain"
         
         summary_parts.append(f"Overall pain intensity: {intensity}/10 ({intensity_desc}).")
         

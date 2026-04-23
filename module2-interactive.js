@@ -376,12 +376,16 @@ async function saveProgress() {
 
 async function generateReport() {
   const total = Object.values(strokeCount).reduce((sum, count) => sum + count, 0);
+  console.log('[Generate Report] strokeCount:', strokeCount);
+  console.log('[Generate Report] total strokes:', total);
+  
   if (total === 0) {
     alert('Please map some pain areas first before generating a report.');
     return;
   }
   
   const painData = collectPainData();
+  console.log('[Generate Report] painData:', painData);
   
   try {
     const response = await fetch(`${API_BASE}/api/pain-mapping/generate-report`, {
