@@ -23,3 +23,8 @@ DAIC-WOZ-zips/
 # Vercel
 voice-health-api/
 .vercel/
+Backend/.env
+PRESENTATION_GUIDE.md
+SYSTEM_WORKFLOW.md
+PRESENTATION_GUIDE_EN.md
+SYSTEM_WORKFLOW_EN.md
