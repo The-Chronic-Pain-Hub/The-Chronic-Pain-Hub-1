@@ -69,14 +69,18 @@ a {
 .logo-text {
   font-family: "Fraunces", serif;
   font-size: 1.3rem;
-  font-weight: 600;
+  font-weight: 700;
   color: inherit;
   text-decoration: none;
+  white-space: nowrap;
 }
 
-.uw-logo,
+.uw-logo{
+  height: 100px;
+  width: auto;
+}
 .lab-logo {
-  height: 40px;
+  height: 130px;
   width: auto;
 }
 
@@ -85,6 +89,7 @@ a {
   align-items: center;
   gap: 18px;
   font-size: 0.95rem;
+  flex-wrap: nowrap;
 }
 
 .nav-links a {

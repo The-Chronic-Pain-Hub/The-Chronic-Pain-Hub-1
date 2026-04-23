@@ -19,28 +19,28 @@ PLACEHOLDER_IMAGES = {
 }
 
 def generateFollowUpQuestions(converHistory: List[Dict]) -> dict:
-    """Generate bilingual visual pain assessment question using available GIF animations"""
+    """Generate visual pain assessment question using available GIF animations"""
     
-    # Fixed bilingual question using available GIFs
+    # Fixed question using available GIFs
     result = {
-        "question": "Which image best describes your pain sensation? | 哪个图像最能描述您的疼痛感觉？",
+        "question": "Which image best describes your pain sensation?",
         "question_type": "quality",
         "options": [
             {
                 "id": "A",
-                "text": "Sharp, stabbing pain | 尖锐刺痛感",
+                "text": "Sharp, stabbing pain",
                 "image_key": "sharp",
                 "image_url": "/images/sharp.gif"
             },
             {
                 "id": "B", 
-                "text": "Pulsing, throbbing pain | 搏动性疼痛",
+                "text": "Pulsing, throbbing pain",
                 "image_key": "pulsing",
                 "image_url": "/images/pulsing.gif"
             },
             {
                 "id": "C",
-                "text": "Burning, hot sensation | 灼烧样疼痛", 
+                "text": "Burning, hot sensation", 
                 "image_key": "burning",
                 "image_url": "/images/burning.gif"
             }

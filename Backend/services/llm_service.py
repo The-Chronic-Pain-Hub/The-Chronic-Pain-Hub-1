@@ -646,7 +646,7 @@ def generate_comprehensive_report(
     Generate comprehensive multilingual clinical report using GPT after rule-based analysis.
     
     Called AFTER neuro-symbolic pipeline completes. Supports multiple languages:
-    Chinese (中文), Korean (한국어), Spanish (Español), Hmong, English
+    Chinese, Korean, Spanish, Hmong, English
     
     Args:
         original_text: Patient's original pain description
@@ -658,19 +658,19 @@ def generate_comprehensive_report(
         biolord_comprehensive_analysis: NEW - Complete BioLORD analysis of ALL terms (dict/unmapped)
         
     Returns:
-        Comprehensive bilingual clinical report (original language + English)
+        Comprehensive clinical report in English
     """
     
-    # Determine bilingual header format based on language
+    # Determine language display names
     language_headers = {
-        "Chinese": "中文",
-        "Korean": "한국어", 
-        "Spanish": "Español",
-        "Hmong": "Hmoob",
+        "Chinese": "Chinese",
+        "Korean": "Korean", 
+        "Spanish": "Spanish",
+        "Hmong": "Hmong",
         "English": "English"
     }
     
-    native_lang = language_headers.get(detected_language, "原语言")
+    native_lang = language_headers.get(detected_language, "Unknown Language")
     
     # If English input, report is English-only
     is_english_only = (detected_language == "English")
@@ -695,14 +695,14 @@ def generate_comprehensive_report(
 - Mark clearly: **(AI-interpreted from cultural context)**
 - If no metaphors found, write: "No culturally-specific metaphors detected."
 
-## 3. BioLORD Medical Terminology Mapping | BioLORD
+## 3. BioLORD Medical Terminology Mapping
 - Display ALL pain terms analyzed by BioLORD AI model
 - Format as clear table:
 
 **Dictionary-Verified Terms** (matched in medical vocabulary + BioLORD semantic verification):
 | Original ({detected_language}) | Mapped English | Semantic Score | Confidence | Pain Type |
-|-------------------------------|----------------|----------------|------------|-----------||
-| [Chinese term] | [English term] | 0.XXX | high/med/low | sensory/affective/neuropathic |
+|-------------------------------|----------------|----------------|------------|-----------|
+| [Original term] | [English term] | 0.XXX | high/med/low | sensory/affective/neuropathic |
 
 **Unmapped Terms** (BioLORD AI-suggested matches):
 | Original | BioLORD Suggestion | Semantic Score | Confidence |
@@ -724,7 +724,7 @@ def generate_comprehensive_report(
 ---
 
 **FORMATTING RULES**:
-- Use English section headings with Chinese subtitle
+- Use English for ALL section headings and content
 - Use markdown formatting (##, **, tables)
 - Include emojis for visual clarity (🌐, 🎭, 🔬, 🩺, 💡)
 - Keep professional but accessible tone
@@ -732,7 +732,7 @@ def generate_comprehensive_report(
 
 **CRITICAL REQUIREMENTS**:
 - Follow section order EXACTLY (Translation → Metaphors → BioLORD → Assessment → Recommendations)
-- Use English for all medical content (Chinese only for original term references)
+- Use English for all medical content (original language only for patient's original term references)
 - Base ENTIRELY on provided data - no speculation
 - If section has no data, write clear "None detected" message"""
 
@@ -817,8 +817,8 @@ def generate_comprehensive_report(
 **CLINICAL RECOMMENDATIONS** (From rule engine):
 {recommendations_summary}
 
-REMEMBER: Start your report with BioLORD Medical Terminology Mapping section (SECTION 1) showing ALL analyzed terms.
-Please generate a comprehensive {"bilingual" if not is_english_only else ""} clinical report."""
+REMEMBER: Start with Translation section, then report BioLORD Medical Terminology Mapping showing ALL analyzed terms.
+Please generate a comprehensive clinical report in English."""
 
     try:
         response = client.chat.completions.create(

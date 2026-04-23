@@ -14,3 +14,4 @@ transformers>=4.30.0
 torchaudio>=2.0.0
 pydub>=0.25.1
 openai-whisper>=20231117
+httpx>=0.24.0
