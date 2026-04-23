@@ -3,11 +3,13 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse, FileResponse
 import os
+import tempfile
 
 from services.whisper_service import transcribeAudio
 from services.llm_service import analyzePainDescription
 from services.conversation_service import generateFollowUpQuestions
 from services.neuro_symbolic_service import analyze_pain_neuro_symbolic, get_system_info
+from services.depression_detection_service import analyze_depression_from_audio
 
 # Smart embedding service selection
 EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL", "biolord")  # Options: "biolord", "openai"
@@ -103,6 +105,50 @@ async def getFollowUpQuestion(request: ConversationRequest):
             "status": "error",
             "message": str(e)
         }
+
+
+@app.post("/analyze")
+async def analyze_depression(file: UploadFile = File(...)):
+    """
+    Depression detection endpoint (for Module3 - Voice Health Screening)
+    
+    Uses wav2vec2 model trained on DAIC-WOZ dataset to predict depression indicators
+    from voice patterns (pitch, rhythm, tone, pauses).
+    
+    This is independent from pain analysis - it's for mental health screening.
+    """
+    # Check file type
+    if not file.content_type.startswith("audio/"):
+        return {"error": "Invalid file type. Please upload an audio file."}
+    
+    suffix = os.path.splitext(file.filename)[1] or ".wav"
+    
+    # Save uploaded file temporarily
+    with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
+        tmp.write(await file.read())
+        tmp_path = tmp.name
+    
+    try:
+        # Convert to WAV format if needed (handles webm/ogg from browser)
+        from pydub import AudioSegment
+        converted_path = tmp_path + "_converted.wav"
+        audio = AudioSegment.from_file(tmp_path)
+        audio.export(converted_path, format="wav")
+        
+        # Analyze using depression detection service
+        result = analyze_depression_from_audio(converted_path)
+        
+        # Cleanup
+        os.unlink(converted_path)
+        os.unlink(tmp_path)
+        
+        return result
+        
+    except Exception as e:
+        # Cleanup on error
+        if os.path.exists(tmp_path):
+            os.unlink(tmp_path)
+        return {"error": str(e)}
 
 
 @app.post("/api/analyze-text-neuro-symbolic")
