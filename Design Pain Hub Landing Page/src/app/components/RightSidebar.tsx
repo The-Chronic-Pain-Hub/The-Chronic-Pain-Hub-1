@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Sparkles, Plus } from 'lucide-react';
+import { Sparkles, Plus, FileText, Save, Loader2 } from 'lucide-react';
 import { SensationComposition } from './SensationComposition';
 
 interface RightSidebarProps {
@@ -10,9 +10,20 @@ interface RightSidebarProps {
     stabbing: number;
   };
   onEditSensation?: () => void;
+  onGenerateReport?: () => void;
+  onSaveProgress?: () => void;
+  isGeneratingReport?: boolean;
+  isSaving?: boolean;
 }
 
-export function RightSidebar({ sensationBreakdown, onEditSensation }: RightSidebarProps) {
+export function RightSidebar({ 
+  sensationBreakdown, 
+  onEditSensation,
+  onGenerateReport,
+  onSaveProgress,
+  isGeneratingReport = false,
+  isSaving = false
+}: RightSidebarProps) {
   const [notes, setNotes] = useState('');
 
   return (
@@ -79,16 +90,58 @@ export function RightSidebar({ sensationBreakdown, onEditSensation }: RightSideb
           <textarea
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
-            placeholder="Type notes here for your appointment..."
-            className="w-full min-h-[100px] p-4 bg-[#F2F4F7] rounded-2xl text-xs resize-none focus:outline-none focus:ring-2 focus:ring-[#005EB8]/20 placeholder:text-[rgba(114,119,131,0.5)]"
+            placeholder="Add any additional notes about the sensation..."
+            className="w-full h-24 p-3 text-xs border border-[rgba(194,198,212,0.2)] rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-[#005EB8] focus:border-transparent"
           />
         </div>
       </div>
 
-      <button className="w-full mt-4 py-4 bg-[#005EB8] text-white rounded-2xl font-semibold text-xs uppercase tracking-wider shadow-[0px_4px_6px_-1px_rgba(0,0,0,0.1),0px_2px_4px_-2px_rgba(0,0,0,0.1)] hover:bg-[#00478D] transition-colors flex items-center justify-center gap-2">
-        <Plus className="w-3.5 h-3.5" />
-        ADD CUSTOM SYMPTOM
-      </button>
+      <div className="space-y-3 mt-4">
+        {onGenerateReport && (
+          <button 
+            onClick={onGenerateReport}
+            disabled={isGeneratingReport}
+            className="w-full py-4 bg-[#005EB8] text-white rounded-2xl font-semibold text-xs uppercase tracking-wider shadow-[0px_4px_6px_-1px_rgba(0,0,0,0.1),0px_2px_4px_-2px_rgba(0,0,0,0.1)] hover:bg-[#00478D] transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isGeneratingReport ? (
+              <>
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                GENERATING...
+              </>
+            ) : (
+              <>
+                <FileText className="w-3.5 h-3.5" />
+                GENERATE REPORT
+              </>
+            )}
+          </button>
+        )}
+
+        {onSaveProgress && (
+          <button 
+            onClick={onSaveProgress}
+            disabled={isSaving}
+            className="w-full py-3 bg-white border-2 border-[#005EB8] text-[#005EB8] rounded-2xl font-semibold text-xs uppercase tracking-wider hover:bg-[rgba(0,94,184,0.05)] transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isSaving ? (
+              <>
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                SAVING...
+              </>
+            ) : (
+              <>
+                <Save className="w-3.5 h-3.5" />
+                SAVE PROGRESS
+              </>
+            )}
+          </button>
+        )}
+
+        <button className="w-full py-3 bg-[#F7F9FC] text-[#424752] rounded-2xl font-semibold text-xs uppercase tracking-wider hover:bg-[#E2E8F0] transition-colors flex items-center justify-center gap-2">
+          <Plus className="w-3.5 h-3.5" />
+          ADD CUSTOM SYMPTOM
+        </button>
+      </div>
     </div>
   );
 }

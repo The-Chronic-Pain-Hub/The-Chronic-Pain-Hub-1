@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Header } from './components/Header';
 import { LeftSidebar } from './components/LeftSidebar';
 import { AnatomicalCanvas } from './components/AnatomicalCanvas';
@@ -6,6 +6,7 @@ import { RightSidebar } from './components/RightSidebar';
 import { Resources } from './components/Resources';
 import { EditSensationDetails } from './components/EditSensationDetails';
 import { History } from './components/History';
+import { painMappingAPI, type PainMapData } from '../services/painMappingAPI';
 
 type PainType = 'burning' | 'aching' | 'stabbing' | 'numbness' | 'tingling' | 'allodynia' | 'other' | 'eraser';
 
@@ -26,6 +27,13 @@ export default function App() {
     allodynia: 0,
     other: 0,
   });
+  const [isGeneratingReport, setIsGeneratingReport] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [sessionId] = useState(() => `session-${Date.now()}`);
+  
+  // Refs to access canvas data
+  const frontCanvasRef = useRef<HTMLCanvasElement>(null);
+  const backCanvasRef = useRef<HTMLCanvasElement>(null);
 
   const handleStrokeAdded = (type: PainType) => {
     if (type !== 'eraser') {
@@ -48,6 +56,58 @@ export default function App() {
       tingling: Math.round((strokeCounts.tingling / total) * 100),
       stabbing: Math.round((strokeCounts.stabbing / total) * 100),
     };
+  };
+
+  const collectPainData = (): PainMapData => {
+    const breakdown = calculateSensationBreakdown();
+    const total = Object.values(strokeCounts).reduce((sum, count) => sum + count, 0);
+
+    return {
+      session_id: sessionId,
+      patient_id: null,
+      pain_regions: [],
+      overall_intensity: intensity,
+      sensation_breakdown: breakdown,
+      total_strokes: total,
+    };
+  };
+
+  const handleGenerateReport = async () => {
+    setIsGeneratingReport(true);
+    try {
+      const painData = collectPainData();
+      const result = await painMappingAPI.generateReport(painData);
+      
+      if (result.status === 'success') {
+        alert(`✅ Report Generated!\n\nSummary: ${result.report.summary}\n\nNeuropathic Probability: ${result.report.neuropathic_probability.toUpperCase()}\n\nRecommended Specialists:\n${result.report.recommended_specialists.join('\n')}`);
+      }
+    } catch (error) {
+      console.error('Error generating report:', error);
+      alert('❌ Failed to generate report. Make sure the backend server is running at http://localhost:8000');
+    } finally {
+      setIsGeneratingReport(false);
+    }
+  };
+
+  const handleSaveProgress = async () => {
+    setIsSaving(true);
+    try {  onGenerateReport={handleGenerateReport}
+            onSaveProgress={handleSaveProgress}
+            isGeneratingReport={isGeneratingReport}
+            isSaving={isSaving}
+          
+      const painData = collectPainData();
+      const result = await painMappingAPI.savePainMapping(painData);
+      
+      if (result.status === 'success') {
+        alert('✅ Pain mapping saved successfully!');
+      }
+    } catch (error) {
+      console.error('Error saving progress:', error);
+      alert('❌ Failed to save progress. Make sure the backend server is running at http://localhost:8000');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -83,6 +143,10 @@ export default function App() {
           <RightSidebar
             sensationBreakdown={calculateSensationBreakdown()}
             onEditSensation={() => setShowEditSensation(true)}
+            onGenerateReport={handleGenerateReport}
+            onSaveProgress={handleSaveProgress}
+            isGeneratingReport={isGeneratingReport}
+            isSaving={isSaving}
           />
         </div>
       )}

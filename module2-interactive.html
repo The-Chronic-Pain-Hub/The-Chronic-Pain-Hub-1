@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Module 2 - Pain Mapping | The Chronic Pain Hub</title>
+  <meta name="description" content="Interactive body map to visually express pain locations and sensations" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@400;600;700&family=Sora:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    .pain-mapping-container {
+      display: grid;
+      grid-template-columns: 300px 1fr 320px;
+      gap: 24px;
+      padding: 40px;
+      max-width: 1800px;
+      margin: 0 auto;
+    }
+
+    /* Left Sidebar - Tools */
+    .tools-sidebar {
+      background: rgba(224, 227, 230, 0.5);
+      backdrop-filter: blur(2px);
+      border: 1px solid rgba(194, 198, 212, 0.3);
+      border-radius: 24px;
+      padding: 24px;
+      height: fit-content;
+    }
+
+    .tools-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 16px;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: #424752;
+    }
+
+    .tools-header::before {
+      content: '';
+      width: 10px;
+      height: 10px;
+      background: #424752;
+      border-radius: 2px;
+    }
+
+    .paint-tools {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin-bottom: 24px;
+    }
+
+    .tool-button {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 8px;
+      border: 1px solid #E2E8F0;
+      border-radius: 12px;
+      background: transparent;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-size: 9px;
+      font-weight: 600;
+      color: #424752;
+    }
+
+    .tool-button:hover {
+      background: #F7F9FC;
+    }
+
+    .tool-button.active {
+      transform: scale(1.05);
+      box-shadow: 0px 2px 4px rgba(0,0,0,0.1);
+      color: white;
+      border-color: transparent;
+    }
+
+    .tool-icon {
+      width: 28px;
+      height: 28px;
+      object-fit: contain;
+    }
+
+    .intensity-display {
+      background: #005EB8;
+      border-radius: 24px;
+      padding: 20px;
+      color: white;
+      margin-top: 16px;
+    }
+
+    .intensity-label {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      opacity: 0.8;
+      margin-bottom: 8px;
+    }
+
+    .intensity-value {
+      font-size: 48px;
+      font-weight: 800;
+      line-height: 1;
+    }
+
+    .intensity-bar {
+      height: 6px;
+      background: rgba(255,255,255,0.2);
+      border-radius: 12px;
+      margin-top: 12px;
+      overflow: hidden;
+    }
+
+    .intensity-fill {
+      height: 100%;
+      background: white;
+      transition: width 0.3s;
+      box-shadow: 0px 0px 8px rgba(255,255,255,0.5);
+    }
+
+    /* Center Canvas Area */
+    .canvas-container {
+      background: white;
+      border-radius: 40px;
+      border: 1px solid rgba(194, 198, 212, 0.1);
+      box-shadow: 0px 1px 2px rgba(0,0,0,0.05);
+      padding: 32px;
+      min-height: 800px;
+    }
+
+    .canvas-header {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+
+    .canvas-header h2 {
+      font-size: 24px;
+      font-weight: 600;
+      color: #191C1E;
+      margin-bottom: 8px;
+    }
+
+    .canvas-views {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 2px;
+      background: rgba(194, 198, 212, 0.1);
+    }
+
+    .canvas-view {
+      background: white;
+      padding: 40px 20px;
+      position: relative;
+      cursor: crosshair;
+    }
+
+    .view-label {
+      position: absolute;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: rgba(114, 119, 131, 0.4);
+    }
+
+    .body-canvas-wrapper {
+      position: relative;
+      width: 100%;
+      height: 600px;
+      margin: 0 auto;
+      max-width: 300px;
+    }
+
+    .body-outline {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0.2;
+      pointer-events: none;
+    }
+
+    .pain-canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+    }
+
+    /* Right Sidebar - Analysis */
+    .analysis-sidebar {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .analysis-card {
+      background: white;
+      border: 1px solid #E2E8F0;
+      border-radius: 24px;
+      padding: 20px;
+      box-shadow: 0px 1px 2px rgba(0,0,0,0.05);
+    }
+
+    .card-title {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: #424752;
+      margin-bottom: 16px;
+    }
+
+    .sensation-breakdown {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .sensation-item {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .sensation-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .sensation-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #191C1E;
+    }
+
+    .sensation-color {
+      width: 12px;
+      height: 12px;
+      border-radius: 3px;
+    }
+
+    .sensation-percentage {
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .sensation-bar {
+      height: 8px;
+      background: #F2F4F7;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .sensation-fill {
+      height: 100%;
+      transition: width 0.3s;
+    }
+
+    .action-buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    .action-button {
+      padding: 12px 20px;
+      border: none;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .action-button.primary {
+      background: #005EB8;
+      color: white;
+    }
+
+    .action-button.primary:hover {
+      background: #00478D;
+    }
+
+    .action-button.secondary {
+      background: white;
+      color: #005EB8;
+      border: 1px solid rgba(0, 94, 184, 0.2);
+    }
+
+    .action-button.secondary:hover {
+      background: rgba(0, 94, 184, 0.05);
+    }
+
+    .color-legend {
+      background: white;
+      border: 1px solid #E2E8F0;
+      border-radius: 16px;
+      padding: 16px;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: start;
+      gap: 12px;
+      margin-bottom: 12px;
+      font-size: 11px;
+    }
+
+    .legend-color {
+      width: 24px;
+      height: 24px;
+      border-radius: 6px;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    .legend-text {
+      flex: 1;
+    }
+
+    .legend-text strong {
+      color: #191C1E;
+    }
+
+    .legend-text span {
+      color: #727783;
+      display: block;
+      font-style: italic;
+      font-size: 10px;
+      margin-top: 2px;
+    }
+
+    /* Report Modal */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal.show {
+      display: flex;
+    }
+
+    .modal-content {
+      background: white;
+      border-radius: 24px;
+      padding: 40px;
+      max-width: 700px;
+      max-height: 80vh;
+      overflow-y: auto;
+      box-shadow: 0px 20px 50px rgba(0,0,0,0.3);
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+    }
+
+    .modal-header h2 {
+      font-size: 24px;
+      font-weight: 700;
+      color: #191C1E;
+    }
+
+    .close-button {
+      background: none;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+      color: #727783;
+    }
+
+    .report-section {
+      margin-bottom: 24px;
+    }
+
+    .report-section h3 {
+      font-size: 14px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #424752;
+      margin-bottom: 12px;
+    }
+
+    .report-section p {
+      font-size: 14px;
+      line-height: 1.6;
+      color: #191C1E;
+    }
+
+    .report-list {
+      list-style: none;
+      padding: 0;
+    }
+
+    .report-list li {
+      padding: 8px 0;
+      border-bottom: 1px solid #E2E8F0;
+      font-size: 13px;
+      color: #424752;
+    }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <div class="container header-inner">
+      <div class="logo-container">
+        <img src="universityofwisconsinmadisonlogo.png" alt="University of Wisconsin Madison" class="uw-logo">
+        <a href="index.html" class="logo-text">The Chronic Pain Hub</a>
+        <img src="Lab_logo.png" alt="Lab Logo" class="lab-logo">
+      </div>
+      <nav class="nav-links">
+        <a href="index.html#modules">Modules</a>
+        <a href="index.html#how">How It Works</a>
+        <a href="module4.html">Find Local Care</a>
+        <a class="cta-button" href="module1.html">Start Building Your Story</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="pain-mapping-container">
+    <!-- Left Sidebar: Paint Tools -->
+    <aside class="tools-sidebar">
+      <div class="tools-header">Paint Tools</div>
+      
+      <div class="paint-tools" id="paintTools">
+        <!-- Tools will be dynamically loaded -->
+      </div>
+
+      <div class="intensity-display">
+        <div class="intensity-label">Intensity Index</div>
+        <div class="intensity-value"><span id="intensityValue">0.0</span><span style="font-size: 14px; opacity: 0.6"> / 10</span></div>
+        <div class="intensity-bar">
+          <div class="intensity-fill" id="intensityFill" style="width: 0%"></div>
+        </div>
+      </div>
+
+      <div class="color-legend" style="margin-top: 20px;">
+        <div class="tools-header">Clinical Color Map</div>
+        <div id="colorLegend">
+          <!-- Legend will be dynamically loaded -->
+        </div>
+      </div>
+    </aside>
+
+    <!-- Center: Canvas Area -->
+    <section class="canvas-container">
+      <div class="canvas-header">
+        <h2>Map Your Pain on Body</h2>
+        <p style="color: #727783; font-size: 14px;">Click and drag to paint pain sensations on the body outline</p>
+      </div>
+
+      <div class="canvas-views">
+        <!-- Front View -->
+        <div class="canvas-view" id="frontView">
+          <div class="view-label">FRONT VIEW</div>
+          <div class="body-canvas-wrapper">
+            <svg class="body-outline" viewBox="0 0 200 500" xmlns="http://www.w3.org/2000/svg">
+              <!-- Simple body outline - front view -->
+              <ellipse cx="100" cy="40" rx="30" ry="35" fill="none" stroke="#c0c0c0" stroke-width="2"/>
+              <line x1="100" y1="75" x2="100" y2="200" stroke="#c0c0c0" stroke-width="2"/>
+              <line x1="100" y1="100" x2="50" y2="180" stroke="#c0c0c0" stroke-width="2"/>
+              <line x1="100" y1="100" x2="150" y2="180" stroke="#c0c0c0" stroke-width="2"/>
+              <line x1="100" y1="200" x2="70" y2="350" stroke="#c0c0c0" stroke-width="2"/>
+              <line x1="100" y1="200" x2="130" y2="350" stroke="#c0c0c0" stroke-width="2"/>
+              <line x1="70" y1="350" x2="70" y2="480" stroke="#c0c0c0" stroke-width="2"/>
+              <line x1="130" y1="350" x2="130" y2="480" stroke="#c0c0c0" stroke-width="2"/>
+            </svg>
+            <canvas id="frontCanvas" class="pain-canvas" width="600" height="1500"></canvas>
+          </div>
+        </div>
+
+        <!-- Back View -->
+        <div class="canvas-view" id="backView">
+          <div class="view-label">BACK VIEW</div>
+          <div class="body-canvas-wrapper">
+            <svg class="body-outline" viewBox="0 0 200 500" xmlns="http://www.w3.org/2000/svg">
+              <!-- Simple body outline - back view -->
+              <ellipse cx="100" cy="40" rx="30" ry="35" fill="none" stroke="#c0c0c0" stroke-width="2"/>
+              <line x1="100" y1="75" x2="100" y2="200" stroke="#c0c0c0" stroke-width="2"/>
+              <line x1="100" y1="100" x2="50" y2="180" stroke="#c0c0c0" stroke-width="2"/>
+              <line x1="100" y1="100" x2="150" y2="180" stroke="#c0c0c0" stroke-width="2"/>
+              <line x1="100" y1="200" x2="70" y2="350" stroke="#c0c0c0" stroke-width="2"/>
+              <line x1="100" y1="200" x2="130" y2="350" stroke="#c0c0c0" stroke-width="2"/>
+              <line x1="70" y1="350" x2="70" y2="480" stroke="#c0c0c0" stroke-width="2"/>
+              <line x1="130" y1="350" x2="130" y2="480" stroke="#c0c0c0" stroke-width="2"/>
+            </svg>
+            <canvas id="backCanvas" class="pain-canvas" width="600" height="1500"></canvas>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Right Sidebar: Analysis -->
+    <aside class="analysis-sidebar">
+      <div class="analysis-card">
+        <div class="card-title">Sensation Composition</div>
+        <div class="sensation-breakdown" id="sensationBreakdown">
+          <p style="color: #727783; font-size: 12px; text-align: center;">No data mapped yet</p>
+        </div>
+      </div>
+
+      <div class="analysis-card">
+        <div class="card-title">Actions</div>
+        <div class="action-buttons">
+          <button class="action-button primary" id="generateReportBtn">Generate Report</button>
+          <button class="action-button secondary" id="clearCanvasBtn">Clear Canvas</button>
+          <button class="action-button secondary" id="saveProgressBtn">Save Progress</button>
+        </div>
+      </div>
+    </aside>
+  </main>
+
+  <!-- Report Modal -->
+  <div class="modal" id="reportModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Pain Mapping Report</h2>
+        <button class="close-button" id="closeModal">&times;</button>
+      </div>
+      <div id="reportContent">
+        <!-- Report will be dynamically generated -->
+      </div>
+    </div>
+  </div>
+
+  <footer class="site-footer">
+    <div class="container footer-grid">
+      <div>
+        <p class="logo">The Chronic Pain Hub</p>
+        <p>A multimodal pain communication and navigation platform.</p>
+      </div>
+      <div>
+        <p><strong>Explore</strong></p>
+        <p><a href="module1.html">Semantic Translator</a></p>
+        <p><a href="module3.html">Bio-Acoustic Capture</a></p>
+        <p><a href="module4.html">Pain Navigation</a></p>
+      </div>
+      <div>
+        <p><strong>Contact</strong></p>
+        <p>Email: info@chronicpainhub.org</p>
+        <p>Serving Wisconsin communities</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="module2-interactive.js"></script>
+</body>
+</html>

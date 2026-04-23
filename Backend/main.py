@@ -8,6 +8,8 @@ from services.whisper_service import transcribeAudio
 from services.llm_service import analyzePainDescription
 from services.conversation_service import generateFollowUpQuestions
 from services.neuro_symbolic_service import analyze_pain_neuro_symbolic, get_system_info
+from services.pain_mapping_service import pain_mapping_service
+from models.pain_mapping import PainMapData, PainReport
 
 # Smart embedding service selection
 EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL", "biolord")  # Options: "biolord", "openai"
@@ -200,6 +202,89 @@ async def getSystemInfo():
             "status": "error",
             "message": str(e)
         }
+
+
+# ========== Module 2: Pain Mapping API Endpoints ==========
+
+@app.post("/api/pain-mapping/save")
+async def savePainMapping(pain_data: PainMapData):
+    """
+    Save pain mapping data
+    
+    Receives pain mapping data from Module 2 interface, including:
+    - Drawing strokes on body canvas
+    - Marked pain regions
+    - Intensity and depth information
+    """
+    try:
+        # Calculate and update statistics
+        stats = pain_mapping_service.calculate_statistics(pain_data)
+        pain_data.total_strokes = stats["total_strokes"]
+        pain_data.sensation_breakdown = stats["sensation_breakdown"]
+        pain_data.neuropathic_indicators = stats["neuropathic_indicators"]
+        pain_data.overall_intensity = stats["overall_intensity"]
+        
+        # TODO: In production, this should be saved to database
+        # Currently only returns processed data
+        
+        return {
+            "status": "success",
+            "message": "Pain mapping data saved successfully",
+            "data": pain_data.model_dump(),
+            "statistics": stats
+        }
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": str(e)
+        }
+
+
+@app.post("/api/pain-mapping/generate-report")
+async def generatePainReport(pain_data: PainMapData):
+    """
+    Generate pain mapping report
+    
+    Based on user's pain mapping data, generates a clinical report including:
+    - Natural language summary
+    - Pain region analysis
+    - Neuropathic pain probability assessment
+    - Recommended specialists
+    """
+    try:
+        # Generate report
+        report = pain_mapping_service.generate_report(pain_data)
+        
+        return {
+            "status": "success",
+            "report": report.model_dump()
+        }
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": str(e)
+        }
+
+
+@app.get("/api/pain-mapping/pain-types")
+async def getPainTypes():
+    """
+    Get all pain types and their clinical significance
+    
+    Returns pain types, color coding, clinical indicators, etc.
+    For frontend usage
+    """
+    try:
+        return {
+            "status": "success",
+            "pain_types": pain_mapping_service.PAIN_TYPE_CLINICAL
+        }
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": str(e)
+        }
+
 
 # Mount static files from root directory (CSS, JS, images, etc.)
 # This must be at the end, after all specific routes are defined

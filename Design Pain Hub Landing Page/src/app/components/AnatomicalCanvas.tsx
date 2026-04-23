@@ -88,15 +88,15 @@ export function AnatomicalCanvas({
       ctx.globalAlpha = 1.0;
       ctx.fillStyle = 'rgba(0,0,0,1)';
       ctx.beginPath();
-      ctx.arc(x, y, 28, 0, Math.PI * 2);
+      ctx.arc(x, y, 16, 0, Math.PI * 2); // Reduced from 28 to 16
       ctx.fill();
       ctx.globalCompositeOperation = 'source-over';
     } else {
-      // Draw mode - paint with color
-      ctx.globalAlpha = 0.3;
+      // Draw mode - paint with color (smaller, smoother strokes)
+      ctx.globalAlpha = 0.4; // Slightly more opaque for better visibility
       ctx.fillStyle = painColors[selectedTool];
       ctx.beginPath();
-      ctx.arc(x, y, 24, 0, Math.PI * 2);
+      ctx.arc(x, y, 12, 0, Math.PI * 2); // Reduced from 24 to 12
       ctx.fill();
       ctx.globalAlpha = 1.0;
     }

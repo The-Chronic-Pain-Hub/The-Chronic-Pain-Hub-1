@@ -17,6 +17,9 @@ function figmaAssetResolver() {
 }
 
 export default defineConfig({
+  // Set base path for deployment in pain-hub-app/ folder
+  base: '/pain-hub-app/',
+  
   plugins: [
     figmaAssetResolver(),
     // The React and Tailwind plugins are both required for Make, even if
@@ -33,4 +36,14 @@ export default defineConfig({
 
   // File types to support raw imports. Never add .css, .tsx, or .ts files to this.
   assetsInclude: ['**/*.svg', '**/*.csv'],
+
+  // Server configuration for ngrok and external access
+  server: {
+    host: true, // Listen on all network interfaces
+    allowedHosts: [
+      'localhost',
+      '.ngrok-free.dev', // Allow all ngrok subdomains
+      'beatriz-steamy-caroline.ngrok-free.dev',
+    ],
+  },
 })
