@@ -9,8 +9,6 @@ import asyncio
 from functools import partial
 
 from services.whisper_service import transcribeAudio
-from services.llm_service import analyzePainDescription
-from services.conversation_service import generateFollowUpQuestions
 from services.neuro_symbolic_service import analyze_pain_neuro_symbolic, get_system_info
 from services.depression_detection_service import analyze_depression_from_audio
 from services.pain_mapping_service import pain_mapping_service
@@ -74,56 +72,6 @@ async def healthCheck():
         "message": "The API is healthy and running",
         "version": "0.1.3"
     }
-    
-    
-@app.post("/api/analyze-audio")
-async def analyze_audio(file: UploadFile = File(...)):
-    #check file
-    if not file.content_type.startswith("audio/"):
-        return {"error": "Invalid file type.", 
-                "message": "Please upload an audio file."}
-    
-    #read file
-    audioBytes = await file.read()
-    
-    try:
-        # Run transcription and analysis in background threads
-        transcription = await asyncio.to_thread(transcribeAudio, audioBytes, None)
-        analysis = await asyncio.to_thread(analyzePainDescription, transcription["text"])
-        
-        return {
-            "status": "success",
-            "message": "Audio file received",
-            "size": len(audioBytes),
-            "filename": file.filename,
-            "trancription": transcription["text"],
-            "language": transcription["language"],
-            "analysis": analysis
-        }
-        
-    except Exception as e:
-        return {
-            "status": "error",
-            "message": str(e)
-        }
-    
-    
-@app.post("/api/follow-up")
-async def getFollowUpQuestion(request: ConversationRequest):
-    try:
-        # Run LLM call in background thread to avoid blocking
-        followUp = await asyncio.to_thread(generateFollowUpQuestions, request.history)
-        
-        return {
-            "status": "success",
-            "followup": followUp
-        }
-    
-    except Exception as e:
-        return {
-            "status": "error",
-            "message": str(e)
-        }
 
 
 @app.post("/analyze")

@@ -39,4 +39,4 @@ REM Start Frontend Server in current window (so we can see both logs)
 echo.
 echo Starting Frontend Server...
 echo ========================================
-python Module4_Server.py
+python -m http.server 3000
