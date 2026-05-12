@@ -8,14 +8,21 @@ import httpx
 import asyncio
 from functools import partial
 
-# ============================================================================
-# LAZY IMPORTS: AI services are imported only when needed
-# This prevents torchcodec/FFmpeg errors from blocking server startup
-# Module 5 (pure frontend) works without these dependencies
-# ============================================================================
+from services.whisper_service import transcribeAudio
+from services.neuro_symbolic_service import analyze_pain_neuro_symbolic, get_system_info
+from services.depression_detection_service import analyze_depression_from_audio
+from services.pain_mapping_service import pain_mapping_service
+from models.pain_mapping import PainMapData, PainReport
 
 # Smart embedding service selection
 EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL", "biolord")  # Options: "biolord", "openai"
+
+if EMBEDDING_MODEL == "biolord":
+    print(f"[Main] Using BioLORD-2023-M embeddings (medical specialist)")
+    from services.semantic_distance_service_biolord import precompute_dictionary_embeddings
+else:
+    print(f"[Main] Using OpenAI embeddings (general purpose)")
+    from services.semantic_distance_service_v2 import precompute_dictionary_embeddings
 
 from pydantic import BaseModel
 from typing import List, Dict
@@ -89,9 +96,6 @@ async def analyze_depression(file: UploadFile = File(...)):
         tmp_path = tmp.name
     
     try:
-        # Lazy import - only load when endpoint is actually called
-        from services.depression_detection_service import analyze_depression_from_audio
-        
         # Convert to WAV format if needed (handles webm/ogg from browser)
         from pydub import AudioSegment
         converted_path = tmp_path + "_converted.wav"
@@ -133,9 +137,6 @@ async def analyzeTextNeuroSymbolic(request: dict):
     Returns structured pain data with complete explainability and reasoning chain.
     """
     try:
-        # Lazy import - only load when endpoint is actually called
-        from services.neuro_symbolic_service import analyze_pain_neuro_symbolic
-        
         patient_text = request.get("text", "")
         if not patient_text:
             return {
@@ -175,10 +176,6 @@ async def analyzeAudioNeuroSymbolic(file: UploadFile = File(...)):
     audioBytes = await file.read()
     
     try:
-        # Lazy import - only load when endpoint is actually called
-        from services.whisper_service import transcribeAudio
-        from services.neuro_symbolic_service import analyze_pain_neuro_symbolic
-        
         # Step 1: Transcribe audio (run in background thread)
         transcription_result = await asyncio.to_thread(transcribeAudio, audioBytes, None)
         original_transcription = transcription_result["text"]
@@ -213,9 +210,6 @@ async def getSystemInfo():
     Useful for documentation and debugging.
     """
     try:
-        # Lazy import - only load when endpoint is actually called
-        from services.neuro_symbolic_service import get_system_info
-        
         info = get_system_info()
         return {
             "status": "success",
@@ -273,7 +267,7 @@ async def proxyNPPES(request: Request):
 # ========== Module 2: Pain Mapping API Endpoints ==========
 
 @app.post("/api/pain-mapping/save")
-async def savePainMapping(pain_data):
+async def savePainMapping(pain_data: PainMapData):
     """
     Save pain mapping data
     
@@ -283,13 +277,6 @@ async def savePainMapping(pain_data):
     - Intensity and depth information
     """
     try:
-        # Lazy import - only load when endpoint is actually called
-        from services.pain_mapping_service import pain_mapping_service
-        from models.pain_mapping import PainMapData
-        
-        # Validate with Pydantic model
-        pain_data = PainMapData(**pain_data)
-        
         # Calculate and update statistics
         stats = pain_mapping_service.calculate_statistics(pain_data)
         pain_data.total_strokes = stats["total_strokes"]
@@ -314,7 +301,7 @@ async def savePainMapping(pain_data):
 
 
 @app.post("/api/pain-mapping/generate-report")
-async def generatePainReport(pain_data):
+async def generatePainReport(pain_data: PainMapData):
     """
     Generate pain mapping report
     
@@ -325,13 +312,6 @@ async def generatePainReport(pain_data):
     - Recommended specialists
     """
     try:
-        # Lazy import - only load when endpoint is actually called
-        from services.pain_mapping_service import pain_mapping_service
-        from models.pain_mapping import PainMapData
-        
-        # Validate with Pydantic model
-        pain_data = PainMapData(**pain_data)
-        
         # Generate report in background thread to avoid blocking
         report = await asyncio.to_thread(pain_mapping_service.generate_report, pain_data)
         
@@ -355,9 +335,6 @@ async def getPainTypes():
     For frontend usage
     """
     try:
-        # Lazy import - only load when endpoint is actually called
-        from services.pain_mapping_service import pain_mapping_service
-        
         return {
             "status": "success",
             "pain_types": pain_mapping_service.PAIN_TYPE_CLINICAL
